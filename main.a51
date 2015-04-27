@@ -49,6 +49,10 @@ timer0_intr:
 	MOV A, PROC_ALIVE
 	
 	CJNE A, #0x00, tgl_counter
+		
+		tgl_counter:
+			NOP
+			NOP
 	
 	
 timer0_intr_fin:

@@ -59,4 +59,11 @@ new_proc:
 	MOV DPH, R2
 	MOV DPL, R3
 	
-	
+	del_proc:
+		NOP
+		NOP
+
+	change_proc:
+		NOP
+		NOP
+END	
