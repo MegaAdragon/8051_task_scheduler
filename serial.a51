@@ -28,6 +28,7 @@ serial_init:
 RET
 
 serial_in:
+CLR F0
 
 JBC RI0, read
 
@@ -35,6 +36,7 @@ RET
 
 read:	
 	MOV B, S0BUF
+	SETB F0
 	
 RET
 
