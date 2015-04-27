@@ -5,6 +5,10 @@ $NOMOD51
 
 EXTRN CODE (serial_init)
 EXTRN CODE (proc_console)
+EXTRN CODE (scheduler_init)
+EXTRN CODE (new_proc)
+EXTRN CODE (del_proc)
+EXTRN CODE (change_proc)
 
 ORG 0
 JMP main
@@ -20,7 +24,7 @@ main:
 	MOV PRC_ADR_L, DPL
 	MOV PRC_ADR_H, DPH
 	MOV PRIO, #0x02
-	LCALL new_process
+	LCALL new_proc
 	
 	SETB EAL
 	SETB ET0
