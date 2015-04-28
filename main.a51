@@ -18,6 +18,7 @@ JMP timer0_intr
 
 main:
 
+	LCALL new_proc
 	LCALL serial_init
 	
 	MOV DPTR, #proc_console

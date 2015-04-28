@@ -10,54 +10,116 @@ PUBLIC new_proc
 PUBLIC del_proc
 PUBLIC change_proc
 	
+	proc_table_data SEGMENT XDATA
+		RSEG proc_table_data
+	
+	proc_table: DS 40 ; allocates space for process table (includes 20 processes)
+		
+	proc_data:  DS 640 ; allocates space to save process context (20 * 32Byte)
+	
 scheduler_code SEGMENT CODE
 	RSEG scheduler_code
+		
+
 
 scheduler_init:
-
-	MOV PROC_CNT, #0x00
-	MOV CURRENT_PID, #-1
+NOP
+NOP
+	
 
 RET
 
 
 new_proc:
 	
-	; save current data
+	SETB PSW.4
+	
 	MOV R0, A
 	MOV R1, B
-	MOV R2, DPH
-	MOV R3, DPL
+	MOV R2, DPL
+	MOV R3, DPH
 	
-	MOV A, PROC_CNT
+	MOV DPTR, #proc_table
+	MOV R7, #19
 	
-	;new PID
-	MOV R4, A
-	MOV RETURN, A
+	search_empty:	
+		; LOW-Byte
+		MOVX A, @DPTR 	
 	
-	INC PROC_CNT
+		MOV TMP_DPL, DPL
+		MOV TMP_DPH, DPH
+		INC DPTR
+		JZ check_high_byte	
+		
+		INC DPTR
+		
+	DJNZ R7, search_empty
+	JMP no_space
 	
-	; calc new adresses
-	MOV B, #PROC_SIZE
-	MUL AB
-	MOV DPL, A
-	MOV DPH, B
+	check_high_byte:
+			; HIGH-Byte
+			
+			MOVX A, @DPTR
+			JZ empty_space_found
+	RET
 	
-	MOV A, PRIO
-	MOVX @DPTR, A
+	empty_space_found:
+		; calc the new offset in proc_data
+		MOV A, #32
+		MOV B, R7
+		MUL AB
+		
+		MOV R4, A
+		MOV R5, B
+		
+		MOV DPTR, #proc_data
+		; LOW-Byte
+		MOV A, DPL
+
+		ADD A,R4
+		MOV R4, A
+		MOV A, DPH
+		ADDC A, R5
+		MOV R5, A
+		
+		; write data
+		MOV DPL, R4
+		MOV DPH, R5
+		
+		; write priority
+		MOV A, PRIO
+		MOVX @DPTR, A
+		
+		MOV A, DPL
+		ADD A, #13
+		MOV DPL, A
+		
+		;check overflow 
+		; set data
+		
+		
+		NOP
+		NOP
+		
+		
+		
+		; insert adress in proc_table
+		MOV DPL, TMP_DPL
+		MOV DPH, TMP_DPH
+		
+		MOV A, R4
+		MOVX @DPTR, A
+		INC DPTR
+		MOV A, R5
+		MOVX @DPTR, A	
+
+		NOP
 	
-	; WHY OFFSET??
-	MOV A, DPL
-	ADD A, #PROC_OFFSET
-	MOV DPL, A
+	no_space:	
+		NOP
+		NOP
+	RET
 	
-	NOP 
-	NOP
-	
-	MOV A, R0
-	MOV B, R1
-	MOV DPH, R2
-	MOV DPL, R3
 	
 	del_proc:
 		NOP
