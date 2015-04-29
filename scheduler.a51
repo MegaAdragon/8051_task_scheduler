@@ -13,7 +13,7 @@ PUBLIC change_proc
 	proc_table_data SEGMENT XDATA
 		RSEG proc_table_data
 	
-	proc_table: DS 40 ; allocates space for process table (includes 20 processes)
+	proc_table: DS 60 ; allocates space for process table (includes 20 processes)
 		
 	proc_data:  DS 640 ; allocates space to save process context (20 * 32Byte)
 	
@@ -63,6 +63,7 @@ new_proc:
 		JZ check_high_byte	
 		
 		INC DPTR
+		INC DPTR
 		
 	DJNZ R7, search_empty
 	;END OF LOOP
@@ -100,14 +101,11 @@ new_proc:
 		
 		; write data
 		MOV DPL, R4
-		MOV DPH, R5
+		MOV DPH, R5		
 		
-		; write priority
-		MOV A, PRIO
-		MOVX @DPTR, A
 		
 		MOV A, DPL
-		ADD A, #13
+		ADD A, #12
 		MOV DPL, A
 		
 		;check overflow
@@ -145,6 +143,19 @@ new_proc:
 		INC DPTR
 		MOV A, R5
 		MOVX @DPTR, A	
+		
+		; set process status byte
+		INC DPTR
+		; write priority
+		MOV A, PRIO
+		RR A
+		RR A
+		RR A
+		
+		; Write PID
+		ORL A, PROC_TYPE_ID
+		
+		MOVX @DPTR, A
 
 		JMP restore_after_new
 
@@ -163,8 +174,64 @@ new_proc:
 ;; END SUBROUTINE <----NEW PROCESS---->
 	
 	del_proc:
-		NOP
-		NOP
+	
+		SETB PSW.4						;Switch to registry bank #2
+	
+		MOV R0, A						;saving from A,B,DPTR
+		MOV R1, B
+		MOV R2, DPL
+		MOV R3, DPH
+		;get the start adress of process table containing adresses of according data
+		MOV DPTR, #proc_table
+		; 20 processes in total can be managed
+		MOV R7, #19 
+		JMP search_type_id
+		
+		; Loop to search ID
+		continue_loop:
+		INC DPTR
+		DEC R7
+		MOV A, R7
+		
+		JZ not_found
+		
+		search_type_id:
+			INC DPTR
+			INC DPTR			
+			MOVX A, @DPTR
+			ANL A, #7
+			
+			CJNE A, PROC_TYPE_ID, continue_loop
+			
+			id_found:
+				MOV A, 0x00
+				MOVX @DPTR, A
+				
+				LCALL dec_dptr
+
+				MOVX @DPTR, A
+				
+				LCALL dec_dptr
+				
+				MOVX @DPTR, A
+		
+		
+		not_found:
+		MOV A,R0						;restoring A,B,DPTR
+		MOV B,R1
+		MOV DPL,R2
+		MOV DPH,R3
+	
+		CLR PSW.4   					;switch back to registry bank 1
+	RET
+	
+	dec_dptr:
+		DEC DPL
+		MOV R6, DPL
+		CJNE R6, #0xFF, SKIP
+		DEC DPH
+		SKIP:
+	RET
 
 	change_proc:
 		NOP

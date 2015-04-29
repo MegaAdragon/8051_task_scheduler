@@ -18,7 +18,14 @@ TMP_DPH			EQU 0x36
 	
 START_ADRL		EQU 0x37
 START_ADRH		EQU 0x38
-	
+
+PROC_TYPE_ID	EQU 0x39
+; Defines for known processes
+ID_A			EQU 0x01
+ID_B 			EQU 0x02
+ID_Z			EQU 0x04
+ID_CON			EQU 0x00
+
 	
 PRIO			EQU 0x50
 

@@ -18,7 +18,17 @@ JMP timer0_intr
 
 main:
 
+	MOV PRIO, #5
+	MOV PROC_TYPE_ID, #ID_B
 	LCALL new_proc
+	
+	MOV PRIO, #2
+	MOV PROC_TYPE_ID, #ID_A
+	LCALL new_proc
+	
+	MOV PROC_TYPE_ID, #ID_A
+	LCALL del_proc
+	
 	LCALL serial_init
 	
 	MOV DPTR, #proc_console
