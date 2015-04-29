@@ -25,16 +25,18 @@ scheduler_code SEGMENT CODE
 scheduler_init:
 NOP
 NOP
-	
-
 RET
 
 
+;;SUBROUTINE <----NEW PROCESS---->
+;
+;
+;
 new_proc:
-	;Switch to registry bank #2
-	SETB PSW.4
-	;saving from A,B,DPTR
-	MOV R0, A
+	
+	SETB PSW.4						;Switch to registry bank #2
+	
+	MOV R0, A						;saving from A,B,DPTR
 	MOV R1, B
 	MOV R2, DPL
 	MOV R3, DPH
@@ -119,12 +121,18 @@ new_proc:
 			MOV A,#0x09
 			MOVX @DPTR,A
 
-		; set data
+		; set data - new process - start adress will be placed on its stack
+		INC DPTR
+		INC DPTR
 		
+		;set start Adress of the new process in it´s DPTR
+		MOV A, #START_ADRL
+		MOVX @DPTR, A
 		
-		NOP
-		NOP
+		INC DPTR
 		
+		MOV A, #START_ADRH
+		MOVX @DPTR, A
 		
 		
 		; insert adress in proc_table
@@ -138,13 +146,21 @@ new_proc:
 		MOV A, R5
 		MOVX @DPTR, A	
 
-		NOP
+		JMP restore_after_new
+
+	; if no free space is found process will be withdrawn 
+	; MESSAGE ???
+	no_space:
+	restore_after_new:
+		
+	MOV A,R0						;restoring A,B,DPTR
+	MOV B,R1
+	MOV DPL,R2
+	MOV DPH,R3
 	
-	no_space:	
-		NOP
-		NOP
+	CLR PSW.4   					;switch back to registry bank 1
 	RET
-	
+;; END SUBROUTINE <----NEW PROCESS---->
 	
 	del_proc:
 		NOP
