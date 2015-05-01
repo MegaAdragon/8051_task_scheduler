@@ -23,8 +23,9 @@ scheduler_code SEGMENT CODE
 
 
 scheduler_init:
-NOP
-NOP
+	MOV DPTR, #proc_table
+	MOV PROC_TABLE_L, DPL
+	MOV PROC_TABLE_H, DPH
 RET
 
 
@@ -400,11 +401,11 @@ new_proc:
 			ADD A,R4
 			MOV DPL, A
 			
+			MOV PROC_TABLE_INDEX, #20
+			
 			JNC get_data
-				INC DPH
-				
-			MOV PROC_TABLE_INDEX, #0x19
-		
+				INC DPH			
+			
 			JMP get_data
 			
 			select_next_process:
