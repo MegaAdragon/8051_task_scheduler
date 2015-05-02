@@ -31,5 +31,9 @@ proc_a:
 	; output 'e'
 	MOV B, #'e'
 	LCALL serial_out
+	
+	loop:
+		NOP
+		JMP loop
 
 END

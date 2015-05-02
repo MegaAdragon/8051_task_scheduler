@@ -19,9 +19,11 @@ ORG 0x0b
 JMP timer0_intr
 
 main:
+
+	
 		
 	LCALL serial_init
-	LCALL scheduler_init
+	LCALL scheduler_init	
 	
 	MOV DPTR, #proc_console
 	MOV PRC_ADR_L, DPL

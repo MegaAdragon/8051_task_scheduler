@@ -23,7 +23,7 @@ serial_init:
 	ANL PCON, #0x7F
 	;Enable Receive
 	SETB REN0
-	
+	SETB TI0
 	
 RET
 
