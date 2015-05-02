@@ -250,6 +250,8 @@ new_proc:
 
 	change_proc:
 	
+	CLR ET0
+	
 		POP TMP_LCALL_L
 		POP TMP_LCALL_H
 	
@@ -568,6 +570,7 @@ new_proc:
 					
 					PUSH TMP_LCALL_H
 					PUSH TMP_LCALL_L
+					SETB ET0
 		RET
 		
 END	

@@ -33,7 +33,8 @@ proc_a:
 	LCALL serial_out
 	
 	loop:
-		NOP
+		SETB WDT
+		SETB SWDT
 		JMP loop
 
 END
