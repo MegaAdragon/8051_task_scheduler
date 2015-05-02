@@ -46,10 +46,7 @@ main:
 		
 	LCALL serial_init
 	LCALL scheduler_init
-	
-	
-	LCALL change_proc
-	
+		
 	SETB EAL
 	SETB ET0
 	SETB TR0
@@ -67,11 +64,15 @@ main:
 ;;TODO:
 ; check if it is save to use TMP_DPL & TMP_DPH
 
-timer0_intr:
+; change_proc only works in ISR
+; adress for RETI comes from process stack
+; RETI goes to selected process
+
+timer0_intr:	
 
 	; reload timer
 	MOV TL0, #INIT_TL0
-	MOV TH0, #INIT_TH0
+	MOV TH0, #INIT_TH0	
 	
 	MOV A, PROC_ALIVE
 	
@@ -84,6 +85,8 @@ timer0_intr:
 		INC DPTR
 		INC DPTR
 		
+		; TODO: PROC_TYPE_ID is not explicit
+		
 		MOVX A, @DPTR
 		ANL A, #0x07
 		
@@ -95,7 +98,7 @@ timer0_intr:
 		
 	get_prio:
 		MOV DPL, TMP_DPL
-		MOV DPH, TMP_DPH
+		MOV DPH, TMP_DPH		
 		
 		INC DPTR
 		INC DPTR
@@ -109,13 +112,13 @@ timer0_intr:
 		
 		MOV PRIO, A
 		
-		DJNZ PRIO, timer0_intr_fin
+		DJNZ PRIO, write_prio
 			LCALL change_proc
-		RETI
+		JMP timer0_intr_fin
 			
 	
 	
-	timer0_intr_fin:
+	write_prio:
 		MOV A, PRIO
 		RR A
 		RR A
@@ -125,6 +128,8 @@ timer0_intr:
 		ANL A, #0x1F
 		ORL A, PRIO
 		MOVX @DPTR, A
+		
+	timer0_intr_fin:
 	RETI 
 
 END

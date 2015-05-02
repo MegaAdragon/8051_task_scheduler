@@ -115,6 +115,13 @@ new_proc:
 		MOV DPL, R4
 		MOV DPH, R5
 		
+		MOV A, DPL
+		ADD A, #13
+		MOV DPL, A
+		
+		JNC save_SP
+			INC DPH
+		
 		
 		; new process has an empty stack, so SP = 0x07h
 		; there was a LCALL before - there is a DPL/DPH on the stack
@@ -437,21 +444,17 @@ new_proc:
 				
 				continue_get_data:
 				MOV DPL, R4
-				MOV DPH, R5
+				MOV DPH, R5		
+								
 				
-				; SP
+				; DPL								
 				MOVX A, @DPTR
-				MOV SP, A				
-				
-				; DPL
-				INC DPTR				
-				MOVX A, @DPTR
-				MOV R0, A 
+				MOV R4, A 
 				
 				; DPH
 				INC DPTR				
 				MOVX A, @DPTR
-				MOV R1, A
+				MOV R5, A
 				
 				; PSW
 				INC DPTR				
@@ -466,7 +469,7 @@ new_proc:
 				; A
 				INC DPTR				
 				MOVX A, @DPTR	
-				MOV R2, A
+				MOV R6, A
 
 				CLR PSW.3
 				CLR PSW.4
@@ -511,6 +514,11 @@ new_proc:
 				MOVX A, @DPTR
 				MOV R7, A
 				
+				; SP
+				INC DPTR
+				MOVX A, @DPTR
+				MOV SP, A
+				
 								
 				SETB PSW.3						;Switch to registry bank #3
 				SETB PSW.4		
@@ -538,9 +546,9 @@ new_proc:
 						JMP get_stack
 						
 				finish_rewrite:
-					MOV DPL, R0
-					MOV DPH, R1
-					MOV A, R2
+					MOV DPL, R4
+					MOV DPH, R5
+					MOV A, R6
 					MOV PSW, TMP_PSW
 					
 					MOV PROC_ALIVE, #0x01
