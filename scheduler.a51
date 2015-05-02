@@ -26,6 +26,7 @@ scheduler_init:
 	MOV DPTR, #proc_table
 	MOV PROC_TABLE_L, DPL
 	MOV PROC_TABLE_H, DPH
+	MOV PROC_TABLE_INDEX, #20
 RET
 
 
@@ -285,19 +286,25 @@ new_proc:
 		MOV TMP_DPH, DPH
 		
 		MOVX A, @DPTR
-		INC DPTR
-		MOV R4, A
+		MOV R4, A		
+		INC DPTR		
 		MOVX A, @DPTR
 		MOV R5, A
+		
+		; check if process selected
+		MOV A, R4
+		JZ check_high
+		JMP write_data
+		check_high:
+		MOV A, R5
+		JZ get_next_process
+		
+		write_data:
 		
 		MOV DPL, R4
 		MOV DPH, R5		
 		
-		MOV A, SP
-		MOVX @DPTR, A
-		
-		; DPL
-		INC DPTR
+		; DPL		
 		MOV A, R2
 		MOVX @DPTR, A
 		
@@ -362,6 +369,11 @@ new_proc:
 		; R7
 		INC DPTR
 		MOV A, R7
+		MOVX @DPTR, A
+		
+		; SP
+		INC DPTR
+		MOV A, SP
 		MOVX @DPTR, A
 		
 		MOV R0, #0x00	

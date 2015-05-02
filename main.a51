@@ -19,33 +19,17 @@ ORG 0x0b
 JMP timer0_intr
 
 main:
-
-	MOV DPTR, #proc_console
-	MOV PRC_ADR_L, DPL
-	MOV PRC_ADR_H, DPH
-	MOV PROC_TYPE_ID, #ID_CON
-	MOV PRIO, #0x02
-	LCALL new_proc
-
-	MOV DPTR, #proc_b
-	MOV PRC_ADR_L, DPL
-	MOV PRC_ADR_H, DPH
-	MOV PRIO, #5
-	MOV PROC_TYPE_ID, #ID_B
-	LCALL new_proc
-	
-	MOV DPTR, #proc_a
-	MOV PRC_ADR_L, DPL
-	MOV PRC_ADR_H, DPH
-	MOV PRIO, #2
-	MOV PROC_TYPE_ID, #ID_A
-	LCALL new_proc
-	
-	MOV PROC_TYPE_ID, #ID_A
-	LCALL del_proc
 		
 	LCALL serial_init
 	LCALL scheduler_init
+	
+	MOV DPTR, #proc_console
+	MOV PRC_ADR_L, DPL
+	MOV PRC_ADR_H, DPH	
+	MOV PROC_TYPE_ID, #ID_CON
+	MOV PRIO, #0x02
+	MOV PROC_ALIVE, #0x01
+	LCALL new_proc
 		
 	SETB EAL
 	SETB ET0
@@ -92,7 +76,7 @@ timer0_intr:
 		
 		MOV PROC_TYPE_ID, A
 		
-		LCALL del_proc
+		;LCALL del_proc
 	
 		LCALL change_proc
 		
