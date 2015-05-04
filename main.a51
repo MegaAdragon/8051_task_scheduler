@@ -18,9 +18,7 @@ JMP main
 ORG 0x0b
 JMP timer0_intr
 
-main:
-
-	
+main:	
 		
 	LCALL serial_init
 	LCALL scheduler_init	
@@ -55,6 +53,7 @@ main:
 ; RETI goes to selected process
 
 timer0_intr:	
+	INC TIMER_CNT
 
 	; reload timer
 	MOV TL0, #INIT_TL0
@@ -62,7 +61,7 @@ timer0_intr:
 	
 	MOV A, PROC_ALIVE
 	
-	CJNE A, #0x00, get_prio
+	CJNE A, #0x00, check_timer
 		
 		; get PROC_TYPE_ID
 		MOV DPL, TMP_DPL
@@ -70,17 +69,29 @@ timer0_intr:
 		
 		INC DPTR
 		INC DPTR
-		
-		; TODO: PROC_TYPE_ID is not explicit
-		
+		INC DPTR
+
+		; get PID
 		MOVX A, @DPTR
-		ANL A, #0x07
+		MOV PID, A
 		
-		MOV PROC_TYPE_ID, A
-		
-		;LCALL del_proc
-	
 		LCALL change_proc
+		
+		LCALL del_proc
+		
+		JMP timer0_intr_fin
+	
+	check_timer:
+		MOV A, TIMER_CNT
+		CJNE A, #5, timer0_intr_fin
+			MOV TIMER_CNT, #0x00
+			INC TIMER2_CNT
+			MOV A, TIMER2_CNT
+			CJNE A, #100, get_prio
+			MOV TIMER2_CNT, #0x00
+			INC SECONDS_TIMER			
+			JMP get_prio
+		
 		
 	get_prio:
 		MOV DPL, TMP_DPL
@@ -115,7 +126,8 @@ timer0_intr:
 		ORL A, PRIO
 		MOVX @DPTR, A
 		
-	timer0_intr_fin:
+		
+	timer0_intr_fin:		
 	RETI 
 
 END

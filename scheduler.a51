@@ -13,7 +13,7 @@ PUBLIC change_proc
 	proc_table_data SEGMENT XDATA
 		RSEG proc_table_data
 	
-	proc_table: DS 60 ; allocates space for process table (includes 20 processes)
+	proc_table: DS 80 ; allocates space for process table (includes 20 processes)
 		
 	proc_data:  DS 640 ; allocates space to save process context (20 * 32Byte)
 	
@@ -65,6 +65,7 @@ new_proc:
 		INC DPTR
 		JZ check_high_byte	
 		
+		INC DPTR
 		INC DPTR
 		INC DPTR
 		
@@ -163,9 +164,13 @@ new_proc:
 		RR A
 		RR A
 		
-		; Write PID
+		; Write PROC_TYPE_ID
 		ORL A, PROC_TYPE_ID
 		
+		MOVX @DPTR, A
+		
+		INC DPTR
+		MOV A, R7
 		MOVX @DPTR, A
 
 		JMP restore_after_new
@@ -187,18 +192,18 @@ new_proc:
 	
 	del_proc:
 	
-		SETB PSW.3						;Switch to registry bank #2
+		SETB PSW.3						;Switch to registry bank #3
 		SETB PSW.4
 	
 		MOV R0, A						;saving from A,B,DPTR
 		MOV R1, B
 		MOV R2, DPL
 		MOV R3, DPH
-		;get the start adress of process table containing adresses of according data
+		;get the start address of process table containing adresses of according data
 		MOV DPTR, #proc_table
 		; 20 processes in total can be managed
 		MOV R7, #19 
-		JMP search_type_id
+		JMP search_pid
 		
 		; Loop to search ID
 		continue_loop:
@@ -208,24 +213,29 @@ new_proc:
 		
 		JZ not_found
 		
-		search_type_id:
+		search_pid:
 			INC DPTR
-			INC DPTR			
-			MOVX A, @DPTR
-			ANL A, #7
+			INC DPTR
+			INC DPTR
+			MOVX A, @DPTR			
 			
-			CJNE A, PROC_TYPE_ID, continue_loop
+			CJNE A, PID, continue_loop
 			
 			id_found:
-				MOV A, 0x00
+				; write #0x00 in PID
+				MOV A, #0x00
 				MOVX @DPTR, A
 				
-				LCALL dec_dptr
-
+				; write #0x00 in ROC_TYPE_ID
+				LCALL dec_dptr				
 				MOVX @DPTR, A
 				
+				; write #0x00 in adress high byte
 				LCALL dec_dptr
+				MOVX @DPTR, A
 				
+				; write #0x00 in address low byte
+				LCALL dec_dptr				
 				MOVX @DPTR, A
 		
 		
@@ -238,6 +248,7 @@ new_proc:
 		
 		CLR PSW.3   					;switch back to registry bank 1
 		CLR PSW.4
+			
 	RET
 	
 	dec_dptr:
@@ -267,7 +278,7 @@ new_proc:
 		
 		MOV R7, PROC_TABLE_INDEX	
 				
-		MOV A, #3
+		MOV A, #4
 		MOV B, R7
 		MUL AB
 		
@@ -410,7 +421,7 @@ new_proc:
 			MOV R0, DPH
 			CJNE A, 0x00, select_next_process
 			
-			MOV A, #3
+			MOV A, #4
 			MOV B, #20
 			MUL AB
 		
@@ -422,7 +433,7 @@ new_proc:
 			ADD A,R4
 			MOV DPL, A
 			
-			MOV PROC_TABLE_INDEX, #20
+			MOV PROC_TABLE_INDEX, #20			
 			
 			JNC get_data
 				INC DPH			
@@ -432,6 +443,7 @@ new_proc:
 			select_next_process:
 				MOV DPL, TMP_DPL
 				MOV DPH, TMP_DPH
+				LCALL dec_dptr
 				LCALL dec_dptr
 				LCALL dec_dptr
 				LCALL dec_dptr

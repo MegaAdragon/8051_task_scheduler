@@ -3,6 +3,7 @@ NAME proc_a
 ; module for process a
 
 #include <Reg517a.inc>
+#include "variables.inc"
 
 PUBLIC proc_a
 EXTRN CODE (serial_out)
@@ -32,9 +33,12 @@ proc_a:
 	MOV B, #'e'
 	LCALL serial_out
 	
+	MOV PROC_ALIVE, #0x00
+	
 	loop:
 		SETB WDT
 		SETB SWDT
+		
 		JMP loop
 
 END

@@ -13,37 +13,25 @@ proc_b_code SEGMENT CODE
 	
 proc_b:
 	
-	;counter for timer
-	MOV R0, #0x00
-	; save current time slice status
-	MOV R1, TIME_SLICE_STAT
+	MOV R0, SECONDS_TIMER
 	
 	check_time_slice:
 		
 		SETB WDT
 		SETB SWDT
 		
-		MOV A,R1
+		MOV A, R0
 		
-		CJNE A, TIME_SLICE_STAT, inc_timer
+		CJNE A, SECONDS_TIMER, inc_timer
 		JMP check_time_slice
-		
-		inc_timer:
-			
-			;save new time slice status
-			MOV R1, TIME_SLICE_STAT
-			
-			;increment timer
-			INC R0
-			MOV A, R0
-			
-			CJNE A, #40, check_time_slice
-				; reset counter
-				MOV R0, #0x00
 				
-				; do stuff
-				MOV B, #'+'
-				LCALL serial_out
+		inc_timer:	
+			
+			MOV R0, SECONDS_TIMER
+			;save new time slice status
+			; do stuff
+			MOV B, #'+'
+			LCALL serial_out
 				
 			JMP check_time_slice
 
