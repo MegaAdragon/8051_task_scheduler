@@ -84,11 +84,14 @@ txt_R3:
 txt_R2:
 	mov	r1, #0
 txt_R1:
-	nop
+	SETB WDT
+		SETB SWDT
 	djnz	r1, txt_R1
-	nop
+	SETB WDT
+		SETB SWDT
 	djnz	r2, txt_R2
-	nop
+	SETB WDT
+		SETB SWDT
 	djnz	r3, txt_R3
 
 ;	jmp	txt_warten

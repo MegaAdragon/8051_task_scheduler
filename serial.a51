@@ -14,13 +14,15 @@ serial_code SEGMENT CODE
 serial_init:
 	
 	; Set SerialMode 1
-	ORL S0CON,#0x50	
+	CLR SM0
+	SETB SM1	
 	;Serial Mode 1 in S1CON
-	ORL S1CON, #0x80
+	;ORL S1CON, #0x80
 	
 	; Baudrate 9600
 	ORL ADCON0, #0x80
 	ANL PCON, #0x7F
+	MOV S0RELL, #0xE6
 	;Enable Receive
 	SETB REN0
 	SETB TI0

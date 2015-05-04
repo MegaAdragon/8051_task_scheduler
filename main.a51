@@ -27,7 +27,7 @@ main:
 	MOV PRC_ADR_L, DPL
 	MOV PRC_ADR_H, DPH	
 	MOV PROC_TYPE_ID, #ID_CON
-	MOV PRIO, #0x02
+	MOV PRIO, #0x01
 	MOV PROC_ALIVE, #0x01
 	LCALL new_proc
 		
@@ -59,9 +59,22 @@ timer0_intr:
 	MOV TL0, #INIT_TL0
 	MOV TH0, #INIT_TH0	
 	
+	check_timer:
+		MOV A, TIMER_CNT
+		CJNE A, #2, continue
+			MOV TIMER_CNT, #0x00
+			INC TIMER2_CNT
+			MOV A, TIMER2_CNT
+			CJNE A, #10, continue
+			MOV TIMER2_CNT, #0x00
+			INC SECONDS_TIMER			
+			JMP get_prio
+			
+	continue:		
+	
 	MOV A, PROC_ALIVE
 	
-	CJNE A, #0x00, check_timer
+	CJNE A, #0x00, get_prio
 		
 		; get PROC_TYPE_ID
 		MOV DPL, TMP_DPL
@@ -81,16 +94,7 @@ timer0_intr:
 		
 		JMP timer0_intr_fin
 	
-	check_timer:
-		MOV A, TIMER_CNT
-		CJNE A, #5, timer0_intr_fin
-			MOV TIMER_CNT, #0x00
-			INC TIMER2_CNT
-			MOV A, TIMER2_CNT
-			CJNE A, #100, get_prio
-			MOV TIMER2_CNT, #0x00
-			INC SECONDS_TIMER			
-			JMP get_prio
+	
 		
 		
 	get_prio:

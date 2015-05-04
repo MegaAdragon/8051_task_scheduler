@@ -56,7 +56,7 @@ proc_console:
 				MOV PRC_ADR_L, DPL
 				MOV PRC_ADR_H, DPH	
 				MOV PROC_TYPE_ID, #ID_B
-				MOV PRIO, #0x01
+				MOV PRIO, #0x05
 				MOV PROC_ALIVE, #0x01
 				LCALL new_proc				
 				
@@ -108,6 +108,8 @@ proc_console:
 			check_z:
 				CLR ET0
 				
+				CJNE A, #'z', loop
+				
 				MOV A, R0
 				
 				CJNE A, #0x00, end_z
@@ -118,7 +120,7 @@ proc_console:
 					MOV PRC_ADR_L, DPL
 					MOV PRC_ADR_H, DPH	
 					MOV PROC_TYPE_ID, #ID_Z
-					MOV PRIO, #0x02
+					MOV PRIO, #0x05
 					MOV PROC_ALIVE, #0x01
 					LCALL new_proc
 					MOV DPL, TMP_DPL
