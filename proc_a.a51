@@ -35,6 +35,7 @@ proc_a:
 	
 	MOV PROC_ALIVE, #0x00
 	
+	; loop until process is killed
 	loop:
 		SETB WDT
 		SETB SWDT

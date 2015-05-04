@@ -56,7 +56,7 @@ proc_console:
 				MOV PRC_ADR_L, DPL
 				MOV PRC_ADR_H, DPH	
 				MOV PROC_TYPE_ID, #ID_B
-				MOV PRIO, #0x05
+				MOV PRIO, #0x01
 				MOV PROC_ALIVE, #0x01
 				LCALL new_proc				
 				
