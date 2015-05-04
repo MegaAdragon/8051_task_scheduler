@@ -93,7 +93,7 @@ timer0_intr:
 		INC DPTR	; goto process status byte
 		INC DPTR
 		
-		;get PRIO (last 3 bit)
+		;get PRIO (first 3 bit)
 		MOVX A, @DPTR
 		ANL A, #0xE0
 		RL A
@@ -129,7 +129,7 @@ timer0_intr:
 		MOV TH1, #INIT_TH1
 		DJNZ TIMER1_CNT, timer1_intr_fin ; check if 1s has passed
 			INC SECONDS_TIMER
-			MOV TIMER2_CNT, #40
+			MOV TIMER1_CNT, #40
 		
 	timer1_intr_fin:
 	RETI

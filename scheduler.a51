@@ -14,19 +14,24 @@ PUBLIC change_proc
 		RSEG proc_table_data
 	
 	proc_table: DS 80 ; allocates space for process table (includes 20 processes)
+					  ; each process gets 4 Byte
+					  ; Byte 1 -> adress of process data (low)
+					  ; Byte 2 -> adress of process data (high)
+					  ; Byte 3 -> process status byte, contains PRIO (first 3 Bit) and PROC_TYPE_ID
+					  ; Byte 4 -> PID
 		
 	proc_data:  DS 640 ; allocates space to save process context (20 * 32Byte)
+					   ; 13 Byte for process data
+					   ; 10 Byte for process stack
 	
 scheduler_code SEGMENT CODE
 	RSEG scheduler_code
-		
-
 
 scheduler_init:
 	MOV DPTR, #proc_table
-	MOV PROC_TABLE_L, DPL
+	MOV PROC_TABLE_L, DPL	; set proc_table address to global variable (for access in other modules)
 	MOV PROC_TABLE_H, DPH
-	MOV PROC_TABLE_INDEX, #20
+	MOV PROC_TABLE_INDEX, #20	; init PROC_TABLE_INDEX on last position
 RET
 
 
@@ -36,15 +41,15 @@ RET
 ;
 new_proc:
 	
-	SETB PSW.3						;Switch to registry bank #2
+	SETB PSW.3						;Switch to registry bank #3
 	SETB PSW.4
 	
-	MOV R0, A						;saving from A,B,DPTR
+	MOV R0, A						;save A,B,DPTR
 	MOV R1, B
 	MOV R2, DPL
 	MOV R3, DPH
-	;get the start adress of process table containing adresses of according data
-	MOV DPTR, #proc_table
+	
+	MOV DPTR, #proc_table	; get the start adress of process table containing adresses of according data
 	; 20 processes in total can be managed
 	MOV R7, #19 
 	
@@ -54,10 +59,9 @@ new_proc:
 	;free spot contains 0x00h as a value in DPL && DPH
 	search_empty:
 	
-		;get DPL of proc_data
-		MOVX A, @DPTR
-		;save the adress
-		MOV TMP_DPL, DPL
+		MOVX A, @DPTR	;get DPL of proc_data
+		
+		MOV TMP_DPL, DPL	;save the address
 		MOV TMP_DPH, DPH
 		
 		;check if DPL && DPH for data is 0x00
@@ -73,7 +77,7 @@ new_proc:
 	;END OF LOOP
 	JMP no_space
 				
-				;subcondition nof LOOP search free space		
+				;subcondition of LOOP search free space		
 				check_high_byte:
 						; HIGH-Byte
 						
@@ -82,10 +86,10 @@ new_proc:
 				RET
 				
 	;NEW PROCESS WILL BE CREATED HERE
-	;there are 20 slot 32 bytes each reserved for proc data
+	;there are 20 slot with 32 bytes each reserved for proc data
 	empty_space_found:
-		; calc the new offset in proc_data
-		
+	
+		; calc the new offset in proc_data		
 		MOV A, #32
 		MOV B, R7
 		MUL AB
@@ -97,6 +101,7 @@ new_proc:
 		; LOW-Byte
 		MOV A, DPL
 
+		; add offset to DPTR
 		ADD A,R4
 		MOV R4, A
 		MOV A, DPH
@@ -107,6 +112,7 @@ new_proc:
 		MOV DPL, R4
 		MOV DPH, R5
 
+		; loop through process data and reset all values
 		MOV R6, #31
 		clean_space:
 			MOV A, 0x00
@@ -117,10 +123,12 @@ new_proc:
 		MOV DPL, R4
 		MOV DPH, R5
 		
+		; add offset for process data
 		MOV A, DPL
-		ADD A, #13
+		ADD A, #PROC_DATA_OFFSET
 		MOV DPL, A
 		
+		; save SP
 		JNC save_SP
 			INC DPH
 		
@@ -135,7 +143,7 @@ new_proc:
 		; set data - new process - start adress will be placed on its stack
 		INC DPTR
 		
-		;set start Adress of the new process in it´s DPTR
+		; put start adress of the new process on it´s stack
 		MOV A, PRC_ADR_L
 		MOVX @DPTR, A
 		
@@ -188,7 +196,7 @@ new_proc:
 	CLR PSW.3   					;switch back to registry bank 1
 	CLR PSW.4
 	RET
-;; END SUBROUTINE <----NEW PROCESS---->
+	;; END SUBROUTINE <----NEW PROCESS---->
 	
 	del_proc:
 	
@@ -205,7 +213,7 @@ new_proc:
 		MOV R7, #19 
 		JMP search_pid
 		
-		; Loop to search ID
+		; Loop to search PID
 		continue_loop:
 		INC DPTR
 		DEC R7
@@ -219,7 +227,7 @@ new_proc:
 			INC DPTR
 			MOVX A, @DPTR			
 			
-			CJNE A, PID, continue_loop
+			CJNE A, PID, continue_loop ; check if the current PID is the searched PID
 			
 			id_found:
 				; write #0x00 in PID
@@ -251,6 +259,7 @@ new_proc:
 			
 	RET
 	
+	; sub routine to decrement DPTR
 	dec_dptr:
 		DEC DPL
 		MOV R6, DPL
@@ -263,12 +272,12 @@ new_proc:
 	
 	CLR ET0
 	
-		POP TMP_LCALL_L
+		POP TMP_LCALL_L	; push address for return on stack
 		POP TMP_LCALL_H
 	
-		MOV TMP_PSW, PSW
+		MOV TMP_PSW, PSW	; save PS"
 		
-		SETB PSW.3						;Switch to registry bank #2
+		SETB PSW.3						;Switch to registry bank #3
 		SETB PSW.4
 	
 		MOV R0, A						;saving from A,B,DPTR
@@ -277,13 +286,15 @@ new_proc:
 		MOV R3, DPH
 		
 		MOV R7, PROC_TABLE_INDEX	
-				
+		
+		; calcute position in process table
 		MOV A, #4
 		MOV B, R7
 		MUL AB
 		
 		MOV R4, A		
 		
+		; set DPTR to calculated position
 		MOV DPTR, #proc_table
 		; LOW-Byte
 		MOV A, DPL
@@ -305,6 +316,7 @@ new_proc:
 		MOV R5, A
 		
 		; check if process selected
+		; if you call change_proc for the first time, this will skip write_data
 		MOV A, R4
 		JZ check_high
 		JMP write_data
@@ -312,6 +324,7 @@ new_proc:
 		MOV A, R5
 		JZ get_next_process
 		
+		; save data of current process
 		write_data:
 		
 		MOV DPL, R4
@@ -391,6 +404,7 @@ new_proc:
 		
 		MOV R0, #0x00	
 		
+		; stack
 		copy_stack:
 			MOV A, R0
 			
@@ -411,28 +425,28 @@ new_proc:
 				
 				JMP copy_stack
 		
+		; search the next process in process table
 		get_next_process:
 		
 			MOV A, TMP_DPL
 			MOV DPTR, #proc_table
 			MOV R0, DPL
+			; if address = 0 -> end of table reached -> goto opposite side table
 			CJNE A, 0x00, select_next_process
 			MOV A, TMP_DPH
 			MOV R0, DPH
 			CJNE A, 0x00, select_next_process
-			
-			MOV A, #4
-			MOV B, #20
-			MUL AB
 		
-			MOV R4, A		
+			MOV R4, #80	; max size of the table	
 			
+			;add max_size to proc_table
 			MOV DPTR, #proc_table
 			; LOW-Byte
 			MOV A, DPL
 			ADD A,R4
 			MOV DPL, A
 			
+			; current position is now at the top of the table
 			MOV PROC_TABLE_INDEX, #20			
 			
 			JNC get_data
@@ -440,6 +454,7 @@ new_proc:
 			
 			JMP get_data
 			
+			; decrement to next process
 			select_next_process:
 				MOV DPL, TMP_DPL
 				MOV DPH, TMP_DPH
@@ -463,6 +478,7 @@ new_proc:
 				MOVX A, @DPTR
 				MOV R5, A
 				
+				; check if there is data in the current position -> if not, take next process
 				JNZ continue_get_data
 				MOV A, R4
 				JNZ continue_get_data
@@ -580,7 +596,7 @@ new_proc:
 					MOV PROC_ALIVE, #0x01
 					
 					
-					PUSH TMP_LCALL_H
+					PUSH TMP_LCALL_H	; reset return adress on stack
 					PUSH TMP_LCALL_L
 					SETB ET0
 		RET

@@ -19,13 +19,14 @@ proc_console_code SEGMENT CODE
 proc_console:
 
 	MOV R0, #0x00 ; save status of z
+	; 0x00 -> no process
 
 	loop:
 	
 		SETB WDT
 		SETB SWDT
 		
-		LCALL serial_in
+		LCALL serial_in	; get serial input
 		
 		MOV A,B
 		
@@ -34,33 +35,32 @@ proc_console:
 			check_a:
 				CJNE A, #'a', check_b
 				
-				CLR ET0
-				MOV DPTR, #proc_a
+				CLR ET0	; disable scheduler interrupt
+				MOV DPTR, #proc_a	; set parameter for start address in proc_a
 				MOV PRC_ADR_L, DPL
 				MOV PRC_ADR_H, DPH	
-				MOV PROC_TYPE_ID, #ID_A
+				MOV PROC_TYPE_ID, #ID_A ; set parameter for PROC_TYPE_ID
 				MOV PRIO, #0x01
 				MOV PROC_ALIVE, #0x01
-				LCALL new_proc	
-			
+				LCALL new_proc	; add new process			
 				
-				SETB ET0
+				SETB ET0	; enable scheduler interrupt
 				JMP loop
 			
 			check_b:
 			
 				CJNE A, #'b', check_c
 			
-				CLR ET0
-				MOV DPTR, #proc_b
+				CLR ET0	; disable scheduler interrupt
+				MOV DPTR, #proc_b	; set parameter for start address in proc_b
 				MOV PRC_ADR_L, DPL
 				MOV PRC_ADR_H, DPH	
-				MOV PROC_TYPE_ID, #ID_B
+				MOV PROC_TYPE_ID, #ID_B	; set parameter for PROC_TYPE_ID
 				MOV PRIO, #0x01
 				MOV PROC_ALIVE, #0x01
-				LCALL new_proc				
+				LCALL new_proc	; add new process		
 				
-				SETB ET0				
+				SETB ET0	; enable scheduler interrupt			
 				
 				JMP loop
 			
@@ -69,7 +69,7 @@ proc_console:
 				
 				CJNE A, #'c', check_z
 				
-				MOV DPL, PROC_TABLE_L
+				MOV DPL, PROC_TABLE_L ; get start address of process table
 				MOV DPH, PROC_TABLE_H
 				; 20 processes in total can be managed
 				MOV R7, #19 
@@ -86,22 +86,20 @@ proc_console:
 					INC DPTR
 					INC DPTR					
 					
-					MOVX A, @DPTR
-					ANL A, #0x07
+					MOVX A, @DPTR	; get the process status byte from the current process
+					ANL A, #0x07	; extract the PROC_TYPE_ID from the process status byte  
 					INC DPTR
 			
-					CJNE A, #ID_B, continue_loop
+					CJNE A, #ID_B, continue_loop ; match PROC_TYPE_ID on ID_B
 			
-				proc_type_found:
-					
-					MOVX A, @DPTR
-					
-					MOV PID, A				
+				proc_type_found:	; found proc_b
 				
-					LCALL del_proc
+					MOVX A, @DPTR	; get PID
+					MOV PID, A					
+					LCALL del_proc	; delete this process
 					
 				not_found:
-				SETB ET0
+				SETB ET0 ; enable scheduler interrupt
 				
 				JMP loop
 				
@@ -110,36 +108,37 @@ proc_console:
 				
 				CJNE A, #'z', loop
 				
-				MOV A, R0
+				MOV A, R0 ; get status of proc_z
 				
-				CJNE A, #0x00, end_z
+				CJNE A, #0x00, end_z ; check if proc_z already exists
 				JMP start_z
 				
-				start_z:
-					MOV DPTR, #proc_z
+				start_z:					
+					MOV DPTR, #proc_z	; set parameter for start address in proc_b
 					MOV PRC_ADR_L, DPL
 					MOV PRC_ADR_H, DPH	
-					MOV PROC_TYPE_ID, #ID_Z
+					MOV PROC_TYPE_ID, #ID_Z	; set parameter for PROC_TYPE_ID
 					MOV PRIO, #0x05
 					MOV PROC_ALIVE, #0x01
-					LCALL new_proc
-					MOV DPL, TMP_DPL
+					LCALL new_proc	; add new process
+					
+					MOV DPL, TMP_DPL	; get the address of the new process
 					MOV DPH, TMP_DPH
 					INC DPTR
 					INC DPTR
 					INC DPTR
-					MOVX A, @DPTR
-					MOV R0, A
+					MOVX A, @DPTR ; get the PID of the new process
+					MOV R0, A 	; save the PID of the new process
 					JMP finish
 					
 				
 				end_z:
-					MOV PID, R0
-					MOV R0, #0x00
-					LCALL del_proc
+					MOV PID, R0	; get PID of proc_z
+					MOV R0, #0x00	; reset status of proc_z
+					LCALL del_proc	; del proc_z
 				
 				finish:
-				SETB ET0
+				SETB ET0	; enable scheduler interrupt
 				
 				JMP loop
 	

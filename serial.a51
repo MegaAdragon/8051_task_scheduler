@@ -15,11 +15,9 @@ serial_init:
 	
 	; Set SerialMode 1
 	CLR SM0
-	SETB SM1	
-	;Serial Mode 1 in S1CON
-	;ORL S1CON, #0x80
+	SETB SM1		
 	
-	; Baudrate 9600
+	; Baudrate 14400
 	ORL ADCON0, #0x80
 	ANL PCON, #0x7F
 	MOV S0RELL, #0xE6
@@ -38,8 +36,7 @@ RET
 
 read:	
 	MOV B, S0BUF
-	SETB F0
-	
+	SETB F0	
 RET
 
 serial_out:

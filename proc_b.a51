@@ -13,27 +13,26 @@ proc_b_code SEGMENT CODE
 	
 proc_b:
 	
-	MOV R0, SECONDS_TIMER
+	MOV R0, SECONDS_TIMER	; save value of current SECONDS_TIMER
 	
-	check_time_slice:
+	check_timer:
 		
 		SETB WDT
 		SETB SWDT
 		
-		MOV A, R0
+		MOV A, R0 ; get saved value of SECONDS_TIMER
 		
-		CJNE A, SECONDS_TIMER, inc_timer
-		JMP check_time_slice
+		CJNE A, SECONDS_TIMER, write	; check if SECONDS_TIMER has changed
+		JMP check_timer
 				
-		inc_timer:	
+		write:	
 			
-			MOV R0, SECONDS_TIMER
-			;save new time slice status
-			; do stuff
+			MOV R0, SECONDS_TIMER ; save new value of SECONDS_TIMER
+			
 			MOV B, #'+'
-			LCALL serial_out
+			LCALL serial_out	; write to serial output
 				
-			JMP check_time_slice
+			JMP check_timer
 
 END
 			
