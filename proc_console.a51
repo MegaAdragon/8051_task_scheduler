@@ -18,15 +18,14 @@ proc_console_code SEGMENT CODE
 		
 proc_console:
 
-	MOV R0, #0x00 ; save status of z
-	; 0x00 -> no process
+MOV R0, #0x00	; Init proc_z: 0x00 -> no process
 
 	loop:
-	
-		SETB WDT
+
+		SETB WDT 					;Turn-off Watchdog
 		SETB SWDT
 		
-		LCALL serial_in	; get serial input
+		LCALL serial_in				; get serial input
 		
 		MOV A,B
 		
