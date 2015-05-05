@@ -40,14 +40,9 @@ RET
 ;
 ;
 new_proc:
-	
-	SETB PSW.3						;Switch to registry bank #3
-	SETB PSW.4
-	
-	MOV R0, A						;save A,B,DPTR
-	MOV R1, B
-	MOV R2, DPL
-	MOV R3, DPH
+
+	; save data from current process	
+    LCALL save_current_proc
 	
 	MOV DPTR, #proc_table	; get the start adress of process table containing adresses of according data
 	; 20 processes in total can be managed
@@ -188,25 +183,14 @@ new_proc:
 	no_space:
 	restore_after_new:
 		
-	MOV A,R0						;restoring A,B,DPTR
-	MOV B,R1
-	MOV DPL,R2
-	MOV DPH,R3
-	
-	CLR PSW.3   					;switch back to registry bank 1
-	CLR PSW.4
+	LCALL restore_proc
 	RET
 	;; END SUBROUTINE <----NEW PROCESS---->
 	
 	del_proc:
 	
-		SETB PSW.3						;Switch to registry bank #3
-		SETB PSW.4
-	
-		MOV R0, A						;saving from A,B,DPTR
-		MOV R1, B
-		MOV R2, DPL
-		MOV R3, DPH
+		LCALL save_current_proc
+		
 		;get the start address of process table containing adresses of according data
 		MOV DPTR, #proc_table
 		; 20 processes in total can be managed
@@ -248,14 +232,8 @@ new_proc:
 		
 		
 		not_found:
-		MOV A,R0						;restoring A,B,DPTR
-		MOV B,R1
-		MOV DPL,R2
-		MOV DPH,R3
-	
-		
-		CLR PSW.3   					;switch back to registry bank 1
-		CLR PSW.4
+		LCALL restore_proc
+		MOV PROC_ALIVE, #0x01
 			
 	RET
 	
@@ -275,15 +253,7 @@ new_proc:
 		POP TMP_LCALL_L	; push address for return on stack
 		POP TMP_LCALL_H
 	
-		MOV TMP_PSW, PSW	; save PS"
-		
-		SETB PSW.3						;Switch to registry bank #3
-		SETB PSW.4
-	
-		MOV R0, A						;saving from A,B,DPTR
-		MOV R1, B
-		MOV R2, DPL
-		MOV R3, DPH
+		LCALL save_current_proc
 		
 		MOV R7, PROC_TABLE_INDEX	
 		
@@ -330,75 +300,16 @@ new_proc:
 		MOV DPL, R4
 		MOV DPH, R5		
 		
-		; DPL		
-		MOV A, R2
-		MOVX @DPTR, A
+		MOV R1, #TMP_PROC_DATA
 		
-		; DPH
-		INC DPTR
-		MOV A, R3
-		MOVX @DPTR, A
-		
-		; PSW
-		INC DPTR
-		MOV A, TMP_PSW
-		MOVX @DPTR, A
-		
-		; B
-		INC DPTR
-		MOV A, R1
-		MOVX @DPTR, A
-		
-		; A
-		INC DPTR
-		MOV A, R0
-		MOVX @DPTR, A
-		
-		CLR PSW.3
-		CLR PSW.4
-		
-		; R0
-		INC DPTR
-		MOV A, R0
-		MOVX @DPTR, A
-		
-		; R1
-		INC DPTR
-		MOV A, R1
-		MOVX @DPTR, A
-		
-		; R2
-		INC DPTR
-		MOV A, R2
-		MOVX @DPTR, A
-		
-		; R3
-		INC DPTR
-		MOV A, R3
-		MOVX @DPTR, A
-		
-		; R4
-		INC DPTR
-		MOV A, R4
-		MOVX @DPTR, A
-		
-		; R5
-		INC DPTR
-		MOV A, R5
-		MOVX @DPTR, A
-		
-		; R6
-		INC DPTR
-		MOV A, R6
-		MOVX @DPTR, A
-		
-		; R7
-		INC DPTR
-		MOV A, R7
-		MOVX @DPTR, A
+		write_current_data:
+			MOV A, @R1
+			MOVX @DPTR, A
+			INC R1
+			INC DPTR
+		CJNE R1, #TMP_PROC_DATA+13, write_current_data
 		
 		; SP
-		INC DPTR
 		MOV A, SP
 		MOVX @DPTR, A
 		
@@ -465,9 +376,6 @@ new_proc:
 				DEC PROC_TABLE_INDEX
 			
 			get_data:
-		
-				SETB PSW.3						;Switch to registry bank #3
-				SETB PSW.4
 				
 				MOV TMP_DPL, DPL
 				MOV TMP_DPH, DPH
@@ -486,8 +394,7 @@ new_proc:
 				
 				continue_get_data:
 				MOV DPL, R4
-				MOV DPH, R5		
-								
+				MOV DPH, R5								
 				
 				; DPL								
 				MOVX A, @DPTR
@@ -512,9 +419,6 @@ new_proc:
 				INC DPTR				
 				MOVX A, @DPTR	
 				MOV R6, A
-
-				CLR PSW.3
-				CLR PSW.4
 								
 				; R0
 				INC DPTR				
@@ -561,10 +465,7 @@ new_proc:
 				MOVX A, @DPTR
 				MOV SP, A
 				
-								
-				SETB PSW.3						;Switch to registry bank #3
-				SETB PSW.4		
-				
+				LCALL save_current_proc				
 				
 				MOV R0, #0x00
 				
@@ -588,17 +489,43 @@ new_proc:
 						JMP get_stack
 						
 				finish_rewrite:
-					MOV DPL, R4
-					MOV DPH, R5
-					MOV A, R6
-					MOV PSW, TMP_PSW
-					
-					MOV PROC_ALIVE, #0x01
-					
+					LCALL restore_proc					
 					
 					PUSH TMP_LCALL_H	; reset return adress on stack
 					PUSH TMP_LCALL_L
 					SETB ET0
+		RET
+		
+		save_current_proc:
+			MOV TMP_PROC_DATA, DPL
+			MOV TMP_PROC_DATA+1, DPH
+			MOV TMP_PROC_DATA+2, PSW
+			MOV TMP_PROC_DATA+3, B
+			MOV TMP_PROC_DATA+4, A
+			MOV TMP_PROC_DATA+5, R0
+			MOV TMP_PROC_DATA+6, R1
+			MOV TMP_PROC_DATA+7, R2
+			MOV TMP_PROC_DATA+8, R3
+			MOV TMP_PROC_DATA+9, R4
+			MOV TMP_PROC_DATA+10, R5	
+			MOV TMP_PROC_DATA+11, R6
+			MOV TMP_PROC_DATA+12, R7		
+		RET
+		
+		restore_proc:
+			MOV DPL, TMP_PROC_DATA
+			MOV DPH, TMP_PROC_DATA+1
+			MOV PSW, TMP_PROC_DATA+2
+			MOV B, TMP_PROC_DATA+3
+			MOV A, TMP_PROC_DATA+4
+			MOV R0, TMP_PROC_DATA+5
+			MOV R1, TMP_PROC_DATA+6
+			MOV R2, TMP_PROC_DATA+7
+			MOV R3, TMP_PROC_DATA+8
+			MOV R4, TMP_PROC_DATA+9
+			MOV R5, TMP_PROC_DATA+10	
+			MOV R6, TMP_PROC_DATA+11
+			MOV R7, TMP_PROC_DATA+12		
 		RET
 		
 END	
