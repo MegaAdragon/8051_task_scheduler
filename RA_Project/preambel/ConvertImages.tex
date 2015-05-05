@@ -1,0 +1,60 @@
+%\immediate\write\outfile{1;Mustermann;Orthogonalitaet}
+
+
+\documentclass{article}
+
+\input epsf
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{epsfig}
+\makeatletter
+  \def\gnuplottexextension@tikz{\string tex}
+\usepackage{tikz}
+\usepackage{gnuplot-lua-tikz}
+\usepackage[miktex]{gnuplottex}
+\usepackage{pgfkeys}
+\usepackage[active,pdftex,tightpage]{preview}
+\PreviewEnvironment[{[]}]{tikzpicture}
+
+
+
+\begin{document}
+
+\begin{figure}
+\begin{center}
+
+%\input{images/Fig4/Fig4.tex}
+%\begin{tikzpicture}[gnuplot]
+%\begin{gnuplot}[terminal=tikz, terminaloptions=nopicenvironment]
+%
+%set terminal tikz solid scale 0.7,0.6 nopicenvironment
+%load "../../preambel/gnuplotstyle-spectrum.style"
+%
+%set xrange [1.8:2.9]
+%#set x2range [0:1]
+%set yrange [0:1.2]
+%set ytics mirror
+%unset key
+%#set label "Temperature: 5K\nLaser: 5 mW\n           353nm" at 1.81,1.1 
+%#set label "Temperature: "at 2.16,1.14 right font ",7.5"
+%#set label "5K" at 2.16,1.14 left font ",7.5"
+%#set label "Laser: "at 2.16,1.08 right font ",7.5"
+%#set label "5 mW" at 2.16,1.08 left font ",7.5"
+%#set label "353 nm" at 2.16,1.02 left font ",7.5"
+%
+%#set label "15 $\\mu$m Pyramid" at 2.53,0.25 tc rgb "#101060"  font ",9"
+%#set label "2 $\\mu$m\n Pyramids" at 1.85,0.3 tc rgb "gray"  font ",9"
+%
+%plot "3645P1.SPC.asc" using 1:($2/1.741510) w l ls 2, \
+%     "3625A.SPC.asc" using 1:($2/2.171371) w l lt 1 lw 4 lc rgb "#101060"
+%\end{gnuplot}
+%%\pgfdeclareimage[ width=2.3cm, height=5cm ]{bk3625small}{images/Fig4/BK3626-small.jpg}
+%%\pgftext[at=\pgfpoint{5.6cm}{2.8cm},left,base]{\pgfuseimage{bk3625small}}
+%\pgfputat{\pgfxy(5.6,2.8)}{\includegraphics[width=2.3cm]{BK3626-small.jpg}}
+%\end{tikzpicture}
+
+
+%\end{center}
+%\end{figure}
+
+%\end{document}

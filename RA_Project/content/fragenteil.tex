@@ -1,0 +1,14 @@
+\section{Fragen zum Projekt}
+\paragraph{Frage 1:} Wie behandeln Sie den doppelten Aufruf eines Prozesses solange dieser aktiv ist? (z.B. bei der Befehlsfolge: \textbf{b}, \textbf{b})
+\paragraph{Antwort 1:} Der doppelte Prozessaufruf wird ganz normal behandelt und es werden zwei Prozesse gleicher Art mit unterschiedlicher ID angelegt. Danach teilt der Task-Verwalter den Prozessen in der üblichen Vorgehensweise die CPU-Zeit zu. 
+
+
+\paragraph{Frage 2:} Wie reagiert ihr Programm auf die Benutzung der seriellen Schnittstelle 0 durch mehrere Prozesse?
+
+\paragraph{Antwort 2:}
+
+
+\paragraph{Frage 3:} Wie haben Sie die Anforderung Prioritäten gelöst?
+
+\paragraph{Antwort 3:}	
+Jede Prozessart (\textbf{a}, \textbf{b}, \textbf{z}, \textbf{Konsole}) bekommt eine Zahl an Zeitscheiben zugeteilt. Damit haben unterschiedliche Prozessarten immer unterschiedlich lang die Aufmerksamkeit der CPU.

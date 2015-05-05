@@ -1,0 +1,114 @@
+%% Dokumentenklasse (Koma Script) -----------------------------------------
+\documentclass[%
+   draft,     % Entwurfsstadium
+   final,      % fertiges Dokument
+	 % --- Paper Settings ---
+   paper=a4,% [Todo: add alternatives]
+   paper=portrait, % landscape
+   %papersize=auto, % driver
+   % --- Base Font Size ---
+   fontsize=12pt,%
+   %%% scrpage2 options, need to be loaded with class or with scrpage2
+   % headinclude,
+   % headexclude,
+   % footinclude,
+   % footexclude,
+	 % --- Koma Script Version ---
+   version=last, %
+	 % --- Math equation alignment ---
+	 % reqno,
+   % leqno,
+%   fleqn, % Formeln linksbündig
+ ]{scrbook} % Classes: scrartcl, scrreprt, scrbook
+
+% Encoding der Dateien (sonst funktionieren Umlaute nicht)
+% Fuer Linux -> utf8
+% Fuer Windows, alte Linux Distributionen -> latin1
+
+% Empfohlen latin1, da einige Pakete mit utf8 Zeichen nicht
+% funktionieren, z.B: listings, soul.
+\usepackage[latin1]{inputenc}
+%\usepackage[ansinew]{inputenc}
+%\usepackage[utf8]{inputenc}
+%\usepackage{ucs}
+%\usepackage[utf8x]{inputenc}
+
+%%% Preambel
+\input{preambel/settings}
+\input{preambel/preambel}
+\pdfminorversion=6		%erlaubt nun auch pdfs mit version 1.5
+%
+%%%% Neue Befehle
+\input{macros/newcommands}
+\input{macros/TableCommands}
+
+%%% Silbentrennung
+\input{preambel/Hyphenation}
+
+
+%Zum Debuggen der Tikz-Bilder lässt sich die preview-Umgebung nutzen
+%plotall rendert nur alle Tikz-Bilder
+%es kann auch nur ein Bildpfad eingegeben werden, so wird nur dieses eine Bild gerendert
+%\DebugTikzpicture{plotall}
+%\DebugTikzpicture{images/Fig4/Fig4}
+
+
+%% Dokument Beginn %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%% - Deckblatt,
+%% - Inhaltsverzeichnis,
+%% - Hauptteil gegliedert z.B. in
+%%   Einleitung, Grundlagen, Experimente, Ergebnisse, Zusammenfassung
+%% - Anhang, (nicht mehr Bestandteil der Arbeit! Wird daher nicht bewertet)
+%% - Literaturverzeichnis,
+%% - Abbildungsverzeichnis (ggf.),
+%% - Tabellenverzeichnis (ggf.),
+%% - Abkürzungsverzeichnis (ggf.),
+%% - Formelverzeichnis (ggf.),
+%% - Erklärung der Urheberschaft,
+
+
+% Deckblatt
+\pagenumbering{alph}
+\input{content/Titel.tex}
+
+% Inhaltsverzeichnis
+\frontmatter
+\pagenumbering{Alph}
+\begingroup
+  \renewcommand*{\chapterpagestyle}{empty}
+  \pagestyle{empty}
+  \tableofcontents
+  \clearpage
+\endgroup
+
+
+% Hauptteil
+%\mainmatter
+\pagenumbering{arabic}
+\input{content/aufgabenstellung.tex}
+\input{content/fragenteil.tex}
+\input{content/kontrollausgaben.tex}
+\input{content/modulbeschreibung.tex}
+
+
+
+% Anhang
+\appendix
+\pagenumbering{Roman}
+\lstinputlisting[label=lst:main]{./listing/main.a51}
+
+% Verzeichnisse
+%\backmatter
+\pagenumbering{roman}
+\renewcommand{\thetable}{C.\arabic{table}}1
+
+
+
+%% Dokument ENDE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+
+
+\immediate\closeout\Imagelist
+
