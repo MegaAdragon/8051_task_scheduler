@@ -182,13 +182,14 @@ new_proc:
 	; MESSAGE ???
 	no_space:
 	restore_after_new:
-		
+	
+	; restore process data
 	LCALL restore_proc
 	RET
 	;; END SUBROUTINE <----NEW PROCESS---->
 	
 	del_proc:
-	
+		; save data from current process
 		LCALL save_current_proc
 		
 		;get the start address of process table containing adresses of according data
@@ -232,28 +233,20 @@ new_proc:
 		
 		
 		not_found:
+		; restore process data
 		LCALL restore_proc
 		MOV PROC_ALIVE, #0x01
 			
 	RET
-	
-	; sub routine to decrement DPTR
-	dec_dptr:
-		DEC DPL
-		MOV R6, DPL
-		CJNE R6, #0xFF, SKIP
-		DEC DPH
-		SKIP:
-	RET
 
 	change_proc:
 	
-	CLR ET0
+		CLR ET0
 	
 		POP TMP_LCALL_L	; push address for return on stack
-		POP TMP_LCALL_H
-	
-		LCALL save_current_proc
+		POP TMP_LCALL_H	
+		
+		LCALL save_current_proc	; save data from current process
 		
 		MOV R7, PROC_TABLE_INDEX	
 		
@@ -302,12 +295,14 @@ new_proc:
 		
 		MOV R1, #TMP_PROC_DATA
 		
+		; write the data of the current process
+		; current data is saved in user ram
 		write_current_data:
 			MOV A, @R1
 			MOVX @DPTR, A
 			INC R1
 			INC DPTR
-		CJNE R1, #TMP_PROC_DATA+13, write_current_data
+		CJNE R1, #TMP_PROC_DATA+13, write_current_data	; check if position in user ram has reached offset
 		
 		; SP
 		MOV A, SP
@@ -465,7 +460,7 @@ new_proc:
 				MOVX A, @DPTR
 				MOV SP, A
 				
-				LCALL save_current_proc				
+				LCALL save_current_proc	; save loaded data as current process		
 				
 				MOV R0, #0x00
 				
@@ -489,11 +484,20 @@ new_proc:
 						JMP get_stack
 						
 				finish_rewrite:
-					LCALL restore_proc					
+					LCALL restore_proc	; restore process data				
 					
 					PUSH TMP_LCALL_H	; reset return adress on stack
 					PUSH TMP_LCALL_L
 					SETB ET0
+		RET
+		
+		; sub routine to decrement DPTR
+		dec_dptr:
+			DEC DPL
+			MOV R6, DPL
+			CJNE R6, #0xFF, SKIP
+			DEC DPH
+			SKIP:
 		RET
 		
 		save_current_proc:
