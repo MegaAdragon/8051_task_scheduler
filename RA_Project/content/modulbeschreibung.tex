@@ -53,6 +53,15 @@ Jeder Prozess besitzt seinen eigenen Datenbereich, worin sein Kontext aufbewahrt
 \label{fig:ext_data}
 \end{figure}
 
+Die Abbildung~\ref{fig:dataprocess} zeigt die reale Speicherbelegung eines eingelagerten Prozesses. Dabei sind die kleineren Adressen unten.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{./images/data_process}
+\caption{Speicherbelegung des externen RAM für einen Prozess}
+\label{fig:dataprocess}
+\end{figure}
+\newpage
 \subsection{Module\label{Module}}
 \subsubsection{Hauptmodul \texttt{main.a51}}
 In der Abbildung~\ref{fig:main} ist das Ablaufdiagramm vom Hauptmodul dargestellt. Die genaue Beschreibung der einzelnen Operationen ist aus dem Listing im Anhang zu entnehmen.
@@ -65,11 +74,93 @@ In der Abbildung~\ref{fig:main} ist das Ablaufdiagramm vom Hauptmodul dargestell
 \end{figure}
 
 \subsubsection{Konsolenprozess \texttt{proc\_console.a51}}
-In der Abbildung~\ref{fig:console} ist das Ablaufdiagramm vom Hauptmodul dargestellt. Die genaue Beschreibung der einzelnen Operationen ist aus dem Listing im Anhang zu entnehmen.
+In der Abbildung~\ref{fig:console} ist das Ablaufdiagramm vom Hauptmodul dargestellt. Der Konsolenprozess ist eine Endlosschleife. Die genaue Beschreibung der einzelnen Operationen ist aus dem Listing im Anhang zu entnehmen.
+
+Bemerkung: Das Vorbereiten des Prozesses, also das setzen der Parameter ist ein eigenständiger Code-Block. Wegen der Übersicht wird dies als Funktion dargestellt.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{./images/console}
 \caption{Ablaufdiagramm \texttt{proc\_console.a51}}
 \label{fig:console}
 \end{figure}
+\newpage
+
+\subsubsection{Taskverwalter \texttt{scheduler.a51}}
+
+\paragraph{new\_process} In der Abbildung~\ref{fig:newproc} ist das Ablaufdiagramm für die Erstellung eines neuen Prozesses dargestellt. Dies ist ein Subprozess des Taskverwalter Moduls. Hierbei werden in die 4 Byte der Prozesstabelle die nötigen Informationen eingetragen [Startadresse des Prozesses (2 Byte), Bitmaske der Priorität und der Prozesstyp ID (1 Byte), Prozess ID (1 Byte) ].
+
+
+So setzt sich die Bitmaske des 3 Bytes eines Prozess in der Prozesstabelle:
+
+\begin{align*}
+B\underbrace{\si{xxxxx}}_{\mathtt{Priorität}}\underbrace{\si{xxx}}_{\mathtt{Prozesstyp}}
+\end{align*}
+
+Die Prozess ID ist ein HEX-Wert welcher der aktuellen Position des Prozesses in der Tabelle entspricht.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{./images/new_proc}
+\caption{Ablaufdiagramm \texttt{newproc}}
+\label{fig:newproc}
+\end{figure}
+
+\paragraph{delete process}
+In der Abbildung~\ref{fig:delproc} ist das Ablaufdiagramm des Subprozesses del\_proc dargestellt. Hierbei werden zunächst die Daten der aktuellen Routine gerettet. Die Prozesstyp ID wird aus der Bitmaske im 3 Byte der Prozesstabelle extrahiert und mit dem zu löschenden Typ verglichen. Bei Übereinstimmung wird die Referenz auf den Prozessdatenbereich des zu löschenden Prozesses entfernt.
+
+Bemerkung: Hier ist es wichtig zu erwähnen, dadurch dass Prozess b in mehreren Instanzen vorkommen kann und er lediglich durch ein einziges Kommando c gelöscht werden kann, wird der erst beste Prozess vom Typ b auf Kommando gelöscht. Um Prozess gezielt zu entfernen müsste man das Beenden Kommando anpassen.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{./images/del_proc}
+\caption{Ablaufdiagramm \texttt{delete process}}
+\label{fig:delproc}
+\end{figure}
+
+\paragraph{change process}
+
+In der Abbildung~\ref{fig:changeproc} ist das Ablaufdiagramm des Subprozesses change process dargestellt. Dieser Subprozess sucht anhand der aktuellen Position des Prozesses den nächsten in der Prozesstabelle. Da es durchaus leere Einträge geben kann, werden diese Übersprungen. Change process wird nur aufgerufen, wenn ein Prozess seine Zeitscheibe bei der CPU aufgebraucht hat. 
+
+Die Daten des aktuellen Prozesses werden in den externen Prozessdatenbereich ausgelagert und die Daten des neuen Prozesses werden eingeladen. Die Daten werden im Kapitel Speichernutzung erklärt.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{./images/change_proc}
+\caption{Ablaufdiagramm \texttt{change process}}
+\label{fig:changeproc}
+\end{figure}
+
+\paragraph{save and restore data}
+In der Abbildung~\ref{fig:restsavproc} ist die Subroutine zum speichern und retten des Kontexts gezeigt. Die Auflistung der Daten ist dem Kapitel Speichernutzung zu entnehmen.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{./images/restore_save_proc}
+\caption{Ablaufdiagramm \texttt{restore and save process}}
+\label{fig:restsavproc}
+\end{figure}
+
+\subsubsection{Prozess a}
+
+In der Abbildung~\ref{fig:proca} ist die Implementierung des Prozess A dargestellt. Prozess A gibt eine Zeichenfolge aus und begibt sich in eine Endlosschleife bis er beendet wird.
+
+		\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.3\textwidth]{./images/proc_a}
+		\caption{Ablaufdiagramm des Prozess a}
+		\label{fig:proca}
+		\end{figure}
+		
+		\subsubsection{Prozess b}
+		
+		In der Abbildung~\ref{fig:procb} ist die Implementierung des Prozess B dargestellt. Beim Start holt sich der Prozess den aktuellen Wert des Sekundenzählers (ganze Sekunden). In einer Schleife wird geprüft, ob sich der Systemwert des Zählers verändert hat. Hiermit ist eine Sekunde vergangen. Danach wird + Zeichen auf die Konsole ausgegeben. 
+		
+				\begin{figure}[H]
+				\centering
+				\includegraphics[width=0.5\textwidth]{./images/proc_b}
+				\caption{Ablaufdiagramm des Prozess b}
+				\label{fig:procb}
+				\end{figure}
+
 \newpage
