@@ -25,12 +25,12 @@ main:
 	LCALL scheduler_init	
 	
 	; add new process for console
-	MOV DPTR, #proc_console
+	MOV DPTR, #proc_console  ;process begin adress
 	MOV PRC_ADR_L, DPL
 	MOV PRC_ADR_H, DPH	
-	MOV PROC_TYPE_ID, #ID_CON
-	MOV PRIO, #0x05
-	MOV PROC_ALIVE, #0x01
+	MOV PROC_TYPE_ID, #ID_CON ;process type identifier
+	MOV PRIO, #0x05 ; 5 time slices priority
+	MOV PROC_ALIVE, #0x01 
 	LCALL new_proc
 		
 	SETB EAL	; enable interrupts	
@@ -45,11 +45,13 @@ main:
 	MOV TH1, #INIT_TH1
 	MOV TIMER1_CNT, #40 ; init counter for timer 1 (40*25ms = 1s)
 	
+	; main loop
 	loop:
 		SETB WDT
 		SETB SWDT
 		
 		JMP loop
+	;end main loop
 		
 
 ;;TODO:
@@ -59,79 +61,88 @@ main:
 ; adress for RETI comes from process stack
 ; RETI goes to selected process
 
-timer0_intr:	
-	; reload timer
-	MOV TL0, #INIT_TL0
-	MOV TH0, #INIT_TH0			
+	;;BEGIN TIMER_1 INTERRUPT HANDLING
+	;
+	;
+	
+	timer0_intr:	
+		; reload timer
+		MOV TL0, #INIT_TL0
+		MOV TH0, #INIT_TH0			
+				
+		
+		MOV A, PROC_ALIVE
+		
+		CJNE A, #0x00, get_prio	; check if process is alive
 			
+			MOV DPL, TMP_DPL	; get address of the current process
+			MOV DPH, TMP_DPH
+			
+			INC DPTR	; goto PID
+			INC DPTR
+			INC DPTR
 	
-	MOV A, PROC_ALIVE
-	
-	CJNE A, #0x00, get_prio	; check if process is alive
-		
-		MOV DPL, TMP_DPL	; get address of the current process
-		MOV DPH, TMP_DPH
-		
-		INC DPTR	; goto PID
-		INC DPTR
-		INC DPTR
-
-		; get PID
-		MOVX A, @DPTR
-		MOV PID, A
-		
-		LCALL change_proc
-		
-		LCALL del_proc
-		
-		JMP timer0_intr_fin		
-		
-	get_prio:
-		MOV DPL, TMP_DPL	; get address of the current process
-		MOV DPH, TMP_DPH		
-		
-		INC DPTR	; goto process status byte
-		INC DPTR
-		
-		;get PRIO (first 3 bit)
-		MOVX A, @DPTR
-		ANL A, #0xE0
-		RL A
-		RL A
-		RL A
-		
-		MOV PRIO, A
-		
-		DJNZ PRIO, write_prio
+			; get PID
+			MOVX A, @DPTR
+			MOV PID, A
+			
 			LCALL change_proc
-		JMP timer0_intr_fin
 			
-	
-	
-	write_prio:
-		MOV A, PRIO
-		RR A
-		RR A
-		RR A
-		MOV PRIO, A
-		MOVX A, @DPTR
-		ANL A, #0x1F
-		ORL A, PRIO
-		MOVX @DPTR, A	; write PRIO back to process status byte
+			LCALL del_proc
+			
+			JMP timer0_intr_fin		
+			
+		get_prio:
+			MOV DPL, TMP_DPL	; get address of the current process
+			MOV DPH, TMP_DPH		
+			
+			INC DPTR	; goto process status byte
+			INC DPTR
+			
+			;get PRIO (first 3 bit)
+			MOVX A, @DPTR
+			ANL A, #0xE0
+			RL A
+			RL A
+			RL A
+			
+			MOV PRIO, A
+			
+			DJNZ PRIO, write_prio
+				LCALL change_proc
+			JMP timer0_intr_fin
+				
 		
 		
-	timer0_intr_fin:		
-	RETI 
+		write_prio:
+			MOV A, PRIO
+			RR A
+			RR A
+			RR A
+			MOV PRIO, A
+			MOVX A, @DPTR
+			ANL A, #0x1F
+			ORL A, PRIO
+			MOVX @DPTR, A	; write PRIO back to process status byte
+			
+			
+		timer0_intr_fin:		
+		RETI 
+	;;END TIMER_1 INTERRUPT HANDLING
 	
 	
+	;;BEGIN TIMER_1 INTERRUPT HANDLING
+	; counts 1s time slices
+	;
 	timer1_intr:
-		MOV TL1, #INIT_TL1	; reset timer
+		MOV TL1, #INIT_TL1				 ; reset timer
 		MOV TH1, #INIT_TH1
 		DJNZ TIMER1_CNT, timer1_intr_fin ; check if 1s has passed
-			INC SECONDS_TIMER
-			MOV TIMER1_CNT, #40
+			INC SECONDS_TIMER			 ; + 1s 
+			MOV TIMER1_CNT, #40			 ; restore TIMER1_CNT
 		
 	timer1_intr_fin:
 	RETI
+	;END TIMER_1 INTERRUPT HANDLING
 
 END
