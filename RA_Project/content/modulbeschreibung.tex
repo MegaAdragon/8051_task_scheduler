@@ -141,6 +141,38 @@ In der Abbildung~\ref{fig:restsavproc} ist die Subroutine zum speichern und rett
 \label{fig:restsavproc}
 \end{figure}
 
+\subsubsection{Serial}
+\paragraph{serial init} In der Abbildung~\ref{fig:serialinit} ist die Subroutine serial init dargestellt. Hierbei werden die notwendigen Parameter gesetzt.
+
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.3\textwidth]{./images/serial_init}
+		\caption{Ablaufdiagramm der Subroutine serial init}
+		\label{fig:serialinit}
+		\end{figure}
+
+
+\paragraph{serial in}
+In der Abbildung~\ref{fig:serialin} ist die Subroutine serial in dargestellt. Beim ende der Eingabe wird das User Flag F0 gesetzt. Dies ist für den Konsolenprozess wichtig. Es können keine Zeichen verloren gehen, da man nach einem Eingabezeichen bereits die Routine verlässt.	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.3\textwidth]{./images/serial_in}
+		\caption{Ablaufdiagramm der Subroutine serial in}
+		\label{fig:serialin}
+		\end{figure}
+
+
+\paragraph{serial out}
+In der Abbildung~\ref{fig:serialout} ist die Subroutine serial out dargestellt. Es wird Zeichen für Zeichen ausgegeben. Es können auch hier keine Zeichen verloren gehen, da man die Schnittstelle sperrt.
+
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.3\textwidth]{./images/serial_out}
+		\caption{Ablaufdiagramm der Subroutine serial out}
+		\label{fig:serialinout}
+		\end{figure}
+
+
 \subsubsection{Prozess a}
 
 In der Abbildung~\ref{fig:proca} ist die Implementierung des Prozess A dargestellt. Prozess A gibt eine Zeichenfolge aus und begibt sich in eine Endlosschleife bis er beendet wird.
@@ -151,8 +183,8 @@ In der Abbildung~\ref{fig:proca} ist die Implementierung des Prozess A dargestel
 		\caption{Ablaufdiagramm des Prozess a}
 		\label{fig:proca}
 		\end{figure}
-		
-		\subsubsection{Prozess b}
+
+\subsubsection{Prozess b}
 		
 		In der Abbildung~\ref{fig:procb} ist die Implementierung des Prozess B dargestellt. Beim Start holt sich der Prozess den aktuellen Wert des Sekundenzählers (ganze Sekunden). In einer Schleife wird geprüft, ob sich der Systemwert des Zählers verändert hat. Hiermit ist eine Sekunde vergangen. Danach wird + Zeichen auf die Konsole ausgegeben. 
 		
