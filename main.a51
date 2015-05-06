@@ -73,7 +73,7 @@ main:
 		
 		MOV A, PROC_ALIVE
 		
-		CJNE A, #0x00, get_prio	; check if process is alive
+		CJNE A, #0x00, check_prio	; check if process is alive
 			
 			MOV DPL, TMP_DPL	; get address of the current process
 			MOV DPH, TMP_DPH
@@ -92,7 +92,15 @@ main:
 			
 			JMP timer0_intr_fin		
 			
-		get_prio:
+		check_prio:	; check if process has time left
+			MOV A, PRIO
+			JZ get_prio
+			DJNZ PRIO, timer0_intr_fin	; if PRIO = 0 -> change process
+				LCALL change_proc
+			JMP timer0_intr_fin
+			
+		get_prio:	; get process priority from process status byte
+			
 			MOV DPL, TMP_DPL	; get address of the current process
 			MOV DPH, TMP_DPH		
 			
@@ -106,26 +114,10 @@ main:
 			RL A
 			RL A
 			
-			MOV PRIO, A
-			
-			DJNZ PRIO, write_prio
-				LCALL change_proc
-			JMP timer0_intr_fin
-				
-		
-		
-		write_prio:
-			MOV A, PRIO
-			RR A
-			RR A
-			RR A
-			MOV PRIO, A
-			MOVX A, @DPTR
-			ANL A, #0x1F
-			ORL A, PRIO
-			MOVX @DPTR, A	; write PRIO back to process status byte
-			
-			
+			MOV PRIO, A	
+
+			JMP check_prio
+					
 		timer0_intr_fin:		
 		RETI 
 	;;END TIMER_1 INTERRUPT HANDLING
