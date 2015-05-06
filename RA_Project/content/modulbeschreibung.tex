@@ -5,6 +5,7 @@
 	\begin{description}[font=\sffamily\bfseries, leftmargin=1.5cm,style=sameline] 
 	\item{\textbf{main}}
 	Dies ist das Hauptprogramm. Beim Start werden die serielle Schnittstelle, das \textbf{scheduler}-Modul und die Timer initialisiert. Der Konsolenprozess wird als neuer Prozess erzeugt. Die Timer-Interrupts werden initialisiert. Danach befindet sich das Hauptprogramm in einer Endlosschleife.
+	Dieses Modul enthält außerdem die Interrupt-Service-Routinen für die beiden Timer und damit auch den wesentlichen Teil der Scheduler-Logik.
 	
 	\item{\textbf{proc\_console}}
 	Dies ist der Konsolenprozess. Der Prozess ist eine Endlosschleife, welche die Eingaben von der seriellen Schnittstelle abholt. Diese Eingaben werden auf Übereinstimmung mit den bekannten Befehlen geprüft. Unbekannte Eingaben werden verworfen, beziehungsweise nicht beachtet. Befehle werden erkannt und ausgeführt.
