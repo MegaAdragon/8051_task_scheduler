@@ -14,8 +14,7 @@
 	\item{\textbf{new\_proc}}
 		Hier wird ein neuer Prozess erzeugt. In der Prozesstabelle im externen RAM wird nach dem ersten freien Platz gesucht (first fit). Jeder Prozess wird vereinfacht gleich groß angenommen (32 Byte).
 		Die Position des gefundenen freien Platzes in der Prozesstabelle entspricht einer Position im Datenbereich der Prozesse. Die Datenbereiche werden initialisiert und in der Prozesstabelle eingetragen.
-		
-		Als Parameter für einen neuen Prozess müssen die gewünschte Priorität, der Typ des Prozesses und die zugehörige Startadresse übergeben werden.
+	
 		
 	\item{\textbf{del\_proc}} Hier wird der Verweis auf den Datenbereich eines zu beendenden Prozesses aus der Prozesstabelle entfernt. Hiermit kennt der Task-Verwalter diesen Prozess und seinen Datenbereich nicht mehr, damit ist er gelöscht.\newline
 	Der zu löschende Prozess wird anhand der übergebenen PID gesucht.
@@ -49,7 +48,8 @@ Externer Datenbereich wird folgendermaßen genutzt: \newline Zu Beginn des Progra
 \newline
 Es sind insgesamt 20 Prozesse möglich. Die Entscheidung für die Zahl 20 ist auf dieses Projekt zugeschnitte, kann generell aber \textquotedblleft beliebig\textquotedblright{} gesetzt werden. Die Grenze bildet hier die Größe des externen Datenbereichs.
 \newline
-Jeder Prozess besitzt seinen eigenen Datenbereich, in dem sein Kontext gespeichert wird. Pro Prozess sind 32 Byte reserviert. Aktuell werden davon lediglich 23 Byte benutzt. Die 10 geforderten Byte für den Stack und 13 Byte für den geforderten Kontext. Eine Erweiterung der Stackgröße ist möglich. Abbildung~\ref{fig:ext_data} zeigt die Speicherbelegung. 
+Jeder Prozess besitzt seinen eigenen Datenbereich, in dem sein Kontext gespeichert wird. Pro Prozess sind 32 Byte reserviert. Aktuell werden davon lediglich 23 Byte benutzt. Die 10 geforderten Byte für den Stack und 13 Byte für den geforderten Kontext. Eine Erweiterung der Stackgröße ist möglich. Abbildung~\ref{fig:ext_data} zeigt die Speicherbelegung. \newline
+Der Vorteil dieses Verfahrens liegt in der Unabhängigkeit vom letztendlichen Prozess. Theoretisch kann eine beliebig große Anzahl von Prozessen, mit beliebigen Daten verwaltet werden. Alle Prozesse werden beim verwalten gleich behandelt, das bedeutet, dass weitere, zusätzliche Prozesse ohne größere Anpassung eingebunden werden könnten.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{./images/ext_data}
@@ -92,10 +92,15 @@ Bemerkung: Das Vorbereiten des Prozesses, also das setzen der Parameter ist ein 
 
 \subsubsection{Taskverwalter \texttt{scheduler.a51}}
 
-\paragraph{new\_process} In der Abbildung~\ref{fig:newproc} ist das Ablaufdiagramm für die Erstellung eines neuen Prozesses dargestellt. Dies ist ein Subprozess des Taskverwaltungs Moduls. Hierbei werden in die 4 Byte der Prozesstabelle die nötigen Informationen eingetragen [Startadresse des Prozesses (2 Byte), Bitmaske der Priorität und der Prozesstyp ID (1 Byte), Prozess ID (1 Byte) ].
+\paragraph{new\_process} In der Abbildung~\ref{fig:newproc} ist das Ablaufdiagramm für die Erstellung eines neuen Prozesses dargestellt. Dies ist ein Subprozess des Taskverwaltungs Moduls. Hierbei werden in die 4 Byte der Prozesstabelle die nötigen Informationen eingetragen [Startadresse des Prozesses (2 Byte), Bitmaske der Priorität und der Prozesstyp ID (1 Byte), Prozess ID (1 Byte) ]. \newline
+Als Parameter für einen neuen Prozess müssen die gewünschte Priorität, der Typ des Prozesses und die zugehörige Startadresse übergeben werden. Die Startadresse des neuen Prozesses (2 Byte) wird beim Anlegen auf den Stack für diesen Prozess geschrieben. Nach dem ersten Aufruf von change process wird an diese Adresse gesprungen und der neue Prozess somit gestartet.
+\newline
+Bemerkung:
+Ein neuer Prozess wird immer an der ersten neuen Stelle eingefügt. Da der Konsolenprozess immer ganz unten in der Tabelle ist, wird mit dem nächsten Prozesswechsel automatisch der neueste eingefügte Prozess gewählt. \newline
+Entsteht durch das Löschen eines Prozesses ein "Loch" in der Tabelle, wird ein neuer Prozess zuerst in das "Loch" eingefügt.
 
 
-So setzt sich die Bitmaske des 3 Bytes eines Prozess in der Prozesstabelle zusammen:
+So setzt sich die Bitmaske des dritten Bytes eines Prozess in der Prozesstabelle zusammen:
 
 \begin{align*}
 B\underbrace{\si{xxxxx}}_{\mathtt{Priorität}}\underbrace{\si{xxx}}_{\mathtt{Prozesstyp}}
@@ -125,9 +130,10 @@ Im Konsolenprozess wird hierfür die PID des ersten in der Tabelle gefunden Proze
 
 \paragraph{change process}
 
-In der Abbildung~\ref{fig:changeproc} ist das Ablaufdiagramm des Subprozesses change process dargestellt. Dieser Subprozess sucht anhand der aktuellen Position des Prozesses den nächsten in der Prozesstabelle. Da es durchaus leere Einträge geben kann, werden diese Übersprungen. Change process wird nur aufgerufen, wenn ein Prozess seine Zeitscheiben für die Verwendung der CPU aufgebraucht hat. 
+In der Abbildung~\ref{fig:changeproc} ist das Ablaufdiagramm des Subprozesses change process dargestellt. Dieser Subprozess sucht anhand der aktuellen Position in der Prozesstabelle den nächsten Prozess. Da es durchaus leere Einträge geben kann, werden diese Übersprungen. Change process wird nur aufgerufen, wenn ein Prozess seine Zeitscheiben für die Verwendung der CPU aufgebraucht hat.
+Die Subroutine rotiert selbstständig durch die Tabelle und merkt sich die jeweils aktuelle Position in globalen Variablen. 
 
-Die Daten des aktuellen Prozesses werden in den externen Prozessdatenbereich ausgelagert und die Daten des neuen Prozesses werden geladen. Die Daten werden im Kapitel Speichernutzung erklärt.
+Die Daten des aktuellen Prozesses werden in den externen Prozessdatenbereich kopiert und die Daten des neuen Prozesses werden geladen. Die Daten werden im Kapitel Speichernutzung spezifiziert.
 
 \begin{figure}[H]
 \centering
@@ -138,7 +144,9 @@ Die Daten des aktuellen Prozesses werden in den externen Prozessdatenbereich aus
 
 \paragraph{save and restore data}
 In der Abbildung~\ref{fig:restsavproc} ist die Subroutine zum speichern und retten des Kontexts gezeigt. Die Auflistung der Daten ist dem Kapitel Speichernutzung zu entnehmen. \newline
-Konkret dient diese Subroutine dazu, alle Daten des aktuellen Prozesses (also des Prozesses, der die entsprechende Scheduler-Funktion aufgerufen hat) temporär in den User RAM zwischenzuspeichern und nach Bedarf wiederherzustellen.
+Konkret dient diese Subroutine dazu, alle Daten des aktuellen Prozesses (also des Prozesses, der die entsprechende Scheduler-Funktion aufgerufen hat) temporär in den User RAM zwischenzuspeichern und nach Bedarf wiederherzustellen.\newline
+Außerdem entspricht die Datenstruktur der geforderten Spezifikation für die Prozessdaten im externen Speicher. Das bedeutet, um einen Prozess zu wechseln können einfach die temporär gespeicherten Daten mittels einer einfachen Schleife in den externen Datenbereich kopiert werden.\newline
+Beim verlassen der oben beschriebenen Subroutinen werden die gespeicherten Prozessdaten wiederhergestellt. Damit sind die Arbeitsbereiche aller Scheduler-Funktionen und die der einzelnen Prozesse komplett voneinander getrennt.
 
 \begin{figure}[H]
 \centering
@@ -159,7 +167,7 @@ Konkret dient diese Subroutine dazu, alle Daten des aktuellen Prozesses (also de
 
 
 \paragraph{serial in}
-In der Abbildung~\ref{fig:serialin} ist die Subroutine serial in dargestellt. Am Ende jeder Eingabe wird das User Flag F0 gesetzt. Der Konsolenprozess wartet mit dem Auswerten einer Eingabe bis dieses Flag gesetzt ist. Für die Rückgabe der des eingegebenen Zeichens wird das Register B verwendet.	
+In der Abbildung~\ref{fig:serialin} ist die Subroutine serial in dargestellt. Am Ende jeder Eingabe wird das User Flag F0 gesetzt. Der Konsolenprozess wartet mit dem Auswerten einer Eingabe bis dieses Flag gesetzt ist. Für die Rückgabe des eingegebenen Zeichens wird das Register B verwendet.	
 	\begin{figure}[H]
 		\centering
 		\includegraphics[width=0.3\textwidth]{./images/serial_in}
