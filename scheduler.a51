@@ -23,6 +23,7 @@ PUBLIC change_proc
 	proc_data:  DS 640 ; allocates space to save process context (20 * 32Byte)
 					   ; 13 Byte for process data
 					   ; 10 Byte for process stack
+					   ; more space is possible
 	
 scheduler_code SEGMENT CODE
 	RSEG scheduler_code
@@ -36,9 +37,6 @@ RET
 
 
 ;;SUBROUTINE <----NEW PROCESS---->
-;
-;
-;
 new_proc:
 
 	; save data from current process	
@@ -81,7 +79,7 @@ new_proc:
 				RET
 				
 	;NEW PROCESS WILL BE CREATED HERE
-	;there are 20 slot with 32 bytes each reserved for proc data
+	;there are 20 slots with 32 bytes each reserved for proc data
 	empty_space_found:
 	
 		; calc the new offset in proc_data		
@@ -500,6 +498,9 @@ new_proc:
 			SKIP:
 		RET
 		
+		; sub routine to save current process data in user ram
+		; the data structure is equal to the specification in proc_data
+		; to switch process context, you only have to copy the data from the user stack
 		save_current_proc:
 			MOV TMP_PROC_DATA, DPL
 			MOV TMP_PROC_DATA+1, DPH
@@ -516,6 +517,7 @@ new_proc:
 			MOV TMP_PROC_DATA+12, R7		
 		RET
 		
+		; sub routine to restore saved process data from user stack
 		restore_proc:
 			MOV DPL, TMP_PROC_DATA
 			MOV DPH, TMP_PROC_DATA+1
