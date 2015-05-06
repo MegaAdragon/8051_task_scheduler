@@ -1,14 +1,18 @@
 \section{Fragen zum Projekt}
 \paragraph{Frage 1:} Wie behandeln Sie den doppelten Aufruf eines Prozesses solange dieser aktiv ist? (z.B. bei der Befehlsfolge: \textbf{b}, \textbf{b})
-\paragraph{Antwort 1:} Der doppelte Prozessaufruf wird ganz normal behandelt und es werden zwei Prozesse gleicher Art mit unterschiedlicher ID angelegt. Danach teilt der Task-Verwalter den Prozessen in der üblichen Vorgehensweise die CPU-Zeit zu. 
+\paragraph{Antwort 1:} Generell wird ein doppelter Prozessaufruf nicht gesondert behandelt. Das bedeutet, dass bei erneutem Aufruf ein zusätzlicher neuer Prozess mit eindeutiger PID angelegt. Danach teilt der Task-Verwalter den Prozessen in der üblichen Vorgehensweise die CPU-Zeit zu. \newline
+Im Fall von \emph{Prozess A} entfällt der doppelte Aufruf, da sich der Prozess vor Ablauf der Zeitscheibe selbst beendet.\newline
+Beim doppelten Aufruf von \emph{Prozess Z} wird geprüft, ob der Prozess bereits existiert. Falls dies der Fall ist, wird der Prozess gelöscht.
 
 
 \paragraph{Frage 2:} Wie reagiert ihr Programm auf die Benutzung der seriellen Schnittstelle 0 durch mehrere Prozesse?
 
-\paragraph{Antwort 2:}
+\paragraph{Antwort 2:} Das Modul \emph{serial} verwendet das Hardwareflag \textbf{TI0} um die Verwendung der seriellen Schnittstelle zu kontrollieren. Vor dem Schreiben auf die serielle Schnittstelle muss gewartet werden, bis \textbf{TI0} gesetzt wurde. Ist das der Fall, wird \textbf{TI0} sofort auf 0 gesetzt und es kann geschrieben werden.\newline
+Dadurch kann ein Prozess beim schreiben nicht von einem anderen Prozess unterbrochen werden. Das bedeutet allerdings auch, dass sich Prozesse blockieren können. Wollen zwei Prozesse gleichzeitig ein Zeichen ausgeben, muss der zweite Prozess so lange warten, bis der erste fertig mit schreiben mit ist. \newline
+Durch dieses Verfahren wird zusätzlich unterbunden, dass Zeichen "verschluckt" werden, da nur nach expliziter Freigabe der seriellen Schnittstelle geschrieben werden darf.
 
 
 \paragraph{Frage 3:} Wie haben Sie die Anforderung Prioritäten gelöst?
 
 \paragraph{Antwort 3:}	
-Jede Prozessart (\textbf{a}, \textbf{b}, \textbf{z}, \textbf{Konsole}) bekommt eine Zahl an Zeitscheiben zugeteilt. Damit haben unterschiedliche Prozessarten immer unterschiedlich lang die Aufmerksamkeit der CPU.
+Jede Prozessart (\textbf{a}, \textbf{b}, \textbf{z}, \textbf{Konsole}) bekommt eine Zahl an Zeitscheiben zugeteilt. Die Anzahl spiegelt hierbei direkt die Priorität des Prozesses wieder. Nach Ablauf einer Zeitscheibe wird die Priorität dekrementiert. Ist die Priorität gleich 0 wird der Prozess gewechselt. Damit haben unterschiedliche Prozessarten immer unterschiedlich lang Rechenzeit von der CPU.
