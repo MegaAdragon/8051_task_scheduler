@@ -1,6 +1,13 @@
+;-----------------------------------------------
+;
+; Serial I/O Module
+;
+;-----------------------------------------------
+
+
 $NOMOD51
 NAME serial
-; module for serial i/o
+
 
 #include <Reg517a.inc>
 

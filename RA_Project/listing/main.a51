@@ -1,3 +1,9 @@
+;-----------------------------------------------
+;
+; MAIN
+;
+;-----------------------------------------------
+
 $NOMOD51
 	
 #include <Reg517a.inc>
@@ -54,26 +60,22 @@ main:
 	;end main loop
 		
 
-;;TODO:
-; check if it is save to use TMP_DPL & TMP_DPH
-
-; change_proc only works in ISR
-; adress for RETI comes from process stack
-; RETI goes to selected process
+	; address for RETI comes from process stack
+	; RETI goes into current process
 
 	;;BEGIN TIMER_1 INTERRUPT HANDLING
 	;
 	;
 	
 	timer0_intr:	
-		; reload timer
-		MOV TL0, #INIT_TL0
+		
+		MOV TL0, #INIT_TL0 ; reload timer
 		MOV TH0, #INIT_TH0			
 				
 		
 		MOV A, PROC_ALIVE
 		
-		CJNE A, #0x00, get_prio	; check if process is alive
+		CJNE A, #0x00, check_prio	; check if process is alive
 			
 			MOV DPL, TMP_DPL	; get address of the current process
 			MOV DPH, TMP_DPH
@@ -92,40 +94,31 @@ main:
 			
 			JMP timer0_intr_fin		
 			
-		get_prio:
+		check_prio:	; check if process has time left
+			MOV A, PRIO
+			JZ get_prio
+			DJNZ PRIO, timer0_intr_fin	; if PRIO = 0 -> change process
+				LCALL change_proc
+			JMP timer0_intr_fin
+			
+		get_prio:	; get process priority from process status byte
+			
 			MOV DPL, TMP_DPL	; get address of the current process
 			MOV DPH, TMP_DPH		
 			
 			INC DPTR	; goto process status byte
 			INC DPTR
 			
-			;get PRIO (first 3 bit)
-			MOVX A, @DPTR
+			MOVX A, @DPTR	;get PRIO (first 3 bit)
 			ANL A, #0xE0
 			RL A
 			RL A
 			RL A
 			
-			MOV PRIO, A
-			
-			DJNZ PRIO, write_prio
-				LCALL change_proc
-			JMP timer0_intr_fin
-				
-		
-		
-		write_prio:
-			MOV A, PRIO
-			RR A
-			RR A
-			RR A
-			MOV PRIO, A
-			MOVX A, @DPTR
-			ANL A, #0x1F
-			ORL A, PRIO
-			MOVX @DPTR, A	; write PRIO back to process status byte
-			
-			
+			MOV PRIO, A	
+
+			JMP check_prio
+					
 		timer0_intr_fin:		
 		RETI 
 	;;END TIMER_1 INTERRUPT HANDLING

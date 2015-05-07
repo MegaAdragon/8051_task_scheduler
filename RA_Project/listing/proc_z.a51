@@ -1,6 +1,12 @@
+;-----------------------------------------------
+;
+; Process z module
+;		
+;-----------------------------------------------
+
 $NOMOD51
 NAME proc_z
-; module for process a
+
 
 #include <Reg517a.inc>
 #include "variables.inc"
@@ -14,10 +20,11 @@ proc_z_code SEGMENT CODE
 
 proc_z:
 	
-	LCALL fkt_text
+	LCALL fkt_text	
 	
-	MOV PROC_ALIVE, #0x00
+	MOV PROC_ALIVE, #0x00 ; if fkt_text returns -> kill process
 	
+	; wait for kill
 	loop:
 		SETB WDT
 		SETB SWDT

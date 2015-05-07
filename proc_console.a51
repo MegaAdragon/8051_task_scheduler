@@ -1,6 +1,11 @@
+;-----------------------------------------------
+;
+; Cnsole process module
+;
+;-----------------------------------------------
 $NOMOD51
 NAME proc_console
-; module for console process
+
 
 #include <Reg517a.inc>
 #include "variables.inc"

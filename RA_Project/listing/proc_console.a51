@@ -1,6 +1,11 @@
+;-----------------------------------------------
+;
+; Cnsole process module
+;
+;-----------------------------------------------
 $NOMOD51
 NAME proc_console
-; module for console process
+
 
 #include <Reg517a.inc>
 #include "variables.inc"
@@ -129,7 +134,7 @@ MOV R0, #0x00				; Init proc_z: 0x00 -> no process
 					MOV PRC_ADR_L, DPL		;pass low byte
 					MOV PRC_ADR_H, DPH		;pass hight byte
 					MOV PROC_TYPE_ID, #ID_Z	;pass process type
-					MOV PRIO, #0x05			;pass process prio
+					MOV PRIO, #0x03			;pass process prio
 					MOV PROC_ALIVE, #0x01	;pass status alive
 					
 					LCALL new_proc			;add new process

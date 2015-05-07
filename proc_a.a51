@@ -1,6 +1,12 @@
+;-----------------------------------------------
+;
+; Process a module
+;
+;-----------------------------------------------
+
 $NOMOD51
 NAME proc_a
-; module for process a
+
 
 #include <Reg517a.inc>
 #include "variables.inc"

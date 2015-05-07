@@ -1,6 +1,13 @@
+;-----------------------------------------------
+;
+; Serial I/O Module
+;
+;-----------------------------------------------
+
+
 $NOMOD51
 NAME serial
-; module for serial i/o
+
 
 #include <Reg517a.inc>
 
@@ -28,7 +35,7 @@ serial_init:
 RET
 
 serial_in:
-CLR F0
+CLR F0	; clear Flag
 
 JBC RI0, read
 
@@ -36,20 +43,22 @@ RET
 
 read:	
 	MOV B, S0BUF
-	SETB F0	
+	SETB F0	; set Flag for proc_console
 RET
 
 serial_out:
 	
 	; wait until TI0 = 1
+	; only write, when previous write is completed
 	wait:
 		SETB WDT
 		SETB SWDT
 		
-	JBC TI0, write
+	JBC TI0, write ; clear TI0
 	JMP wait
 	
 	write:
-		MOV S0BUF, B
+		MOV S0BUF, B	; write B to serial
+		; after successfull write, hardware sets TI0 = 1
 RET
 END

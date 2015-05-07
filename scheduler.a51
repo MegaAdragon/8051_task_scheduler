@@ -1,6 +1,10 @@
+;-----------------------------------------------
+;
+; Scheduler module
+;
+;-----------------------------------------------
 $NOMOD51
 name scheduler
-; module to manage processes
 
 #include <Reg517a.inc>
 #include "variables.inc"
@@ -457,6 +461,8 @@ new_proc:
 				INC DPTR
 				MOVX A, @DPTR
 				MOV SP, A
+				
+				MOV PSW, TMP_PSW
 				
 				LCALL save_current_proc	; save loaded data as current process		
 				
