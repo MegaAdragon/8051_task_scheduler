@@ -78,6 +78,7 @@ In der Abbildung~\ref{fig:main} ist das Ablaufdiagramm vom Hauptmodul dargestell
 \end{figure}
 
 \subsubsection{Konsolenprozess \texttt{proc\_console.a51}}
+
 In der Abbildung~\ref{fig:console} ist das Ablaufdiagramm vom Hauptmodul dargestellt. Der Konsolenprozess ist eine Endlosschleife. Die genaue Beschreibung der einzelnen Operationen ist aus dem Listing im Anhang zu entnehmen.
 
 Bemerkung: Das Vorbereiten des Prozesses, also das setzen der Parameter ist ein eigenständiger Code-Block. Zur besseren Übersicht wird dies als Funktion dargestellt.
@@ -105,7 +106,7 @@ Die Prozess ID ist ein HEX-Wert welcher der aktuellen Position des Prozesses in 
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{./images/new_proc}
+\includegraphics[width=0.4\textwidth]{./images/new_proc}
 \caption{Ablaufdiagramm \texttt{newproc}}
 \label{fig:newproc}
 \end{figure}
@@ -118,7 +119,7 @@ Im Konsolenprozess wird hierfür die PID des ersten in der Tabelle gefunden Proze
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{./images/del_proc}
+\includegraphics[width=0.5\textwidth]{./images/del_proc}
 \caption{Ablaufdiagramm \texttt{delete process}}
 \label{fig:delproc}
 \end{figure}
@@ -131,7 +132,7 @@ Die Daten des aktuellen Prozesses werden in den externen Prozessdatenbereich aus
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{./images/change_proc}
+\includegraphics[width=0.5\textwidth]{./images/change_proc}
 \caption{Ablaufdiagramm \texttt{change process}}
 \label{fig:changeproc}
 \end{figure}
@@ -178,6 +179,28 @@ In der Abbildung~\ref{fig:serialout} ist die Subroutine serial out dargestellt. 
 		\label{fig:serialinout}
 		\end{figure}
 
+\subsubsection{Interrupt Routinen}
+In der Abbildung \ref{fig:intr0} und in der Abbildung \ref{fig:intr1} sind die Ablaufdiagramme für das Verhalten der Timer Interruptroutinen dargestellt. 
+
+In der Interrupt Service Routine für den Timer 0 befindet sich die Logik zur Umschaltung der Prozesse. Hierbei wird anhand der Priorität geprüft, ob einem Prozess die CPU-Rechenzeit noch zur Verfügung steht oder entzogen werden soll. 
+
+Die Interrupt Service Routine für den Timer 1 inkrementiert den Sekundenzähler.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\textwidth]{./images/timer0_intr}
+	\caption{Ablaufdiagramm der Subroutine für Timer Interrupt 0}
+	\label{fig:intr0}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.2\textwidth]{./images/timer1_intr}
+	\caption{Ablaufdiagramm der Subroutine für Timer Interrupt 1}
+	\label{fig:intr1}
+\end{figure}
+
 
 \subsubsection{Prozess a}
 
@@ -196,7 +219,7 @@ In der Abbildung~\ref{fig:proca} ist die Implementierung des Prozess A dargestel
 		
 				\begin{figure}[H]
 				\centering
-				\includegraphics[width=0.5\textwidth]{./images/proc_b}
+				\includegraphics[width=0.3\textwidth]{./images/proc_b}
 				\caption{Ablaufdiagramm des Prozess b}
 				\label{fig:procb}
 				\end{figure}
