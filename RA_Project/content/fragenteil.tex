@@ -1,8 +1,8 @@
 \section{Fragen zum Projekt}
 \paragraph{Frage 1:} Wie behandeln Sie den doppelten Aufruf eines Prozesses solange dieser aktiv ist? (z.B. bei der Befehlsfolge: \textbf{b}, \textbf{b})
 \paragraph{Antwort 1:} Generell wird ein doppelter Prozessaufruf nicht gesondert behandelt. Das bedeutet, dass bei erneutem Aufruf ein zusätzlicher neuer Prozess mit eindeutiger PID angelegt wird. Danach teilt der Task-Verwalter den Prozessen in der üblichen Vorgehensweise die CPU-Zeit zu. \newline
-Im Fall von \emph{Prozess a} kommt der reale doppelte Aufruf gar nicht vor, da sich der Prozess vor Ablauf der Zeitscheibe selbst beendet. Allerdings da jeder Prozess gleich behandelt wird, wird hier kein Unterschied gemacht.\newline
-Beim doppelten Aufruf des Text-Prozess wird geprüft, ob der Prozess bereits existiert. Falls dies der Fall ist, wird er gelöscht. Dies ist der Befehlsstruktur des Prozesses geschuldet. 
+Im Fall von \emph{Prozess a} kommt der reale doppelte Aufruf gar nicht vor, da sich der Prozess vor Ablauf der Zeitscheibe selbst beendet. Theoretisch wird der Prozess aber nicht anders als die anderen Prozesse gehandhabt.\newline
+Beim doppelten Aufruf des Text-Prozess wird geprüft, ob der Prozess bereits existiert. Falls dies der Fall ist, wird er gelöscht. Dies entspricht der vorgegeben Befehlsstruktur des Prozesses.
 
 
 \paragraph{Frage 2:} Wie reagiert ihr Programm auf die Benutzung der seriellen Schnittstelle 0 durch mehrere Prozesse?
@@ -11,8 +11,9 @@ Beim doppelten Aufruf des Text-Prozess wird geprüft, ob der Prozess bereits exis
 Dadurch kann ein Prozess beim schreiben nicht von einem anderen Prozess unterbrochen werden. Das bedeutet allerdings auch, dass sich Prozesse blockieren können. Wollen zwei Prozesse gleichzeitig ein Zeichen ausgeben, muss der zweite Prozess so lange warten, bis der erste fertig mit schreiben ist. \newline
 Durch dieses Verfahren wird zusätzlich unterbunden, dass Zeichen "verschluckt" werden, da nur nach expliziter Freigabe der seriellen Schnittstelle geschrieben werden darf.
 
+\newpage
 
 \paragraph{Frage 3:} Wie haben Sie die Anforderung Prioritäten gelöst?
 
 \paragraph{Antwort 3:}	
-Jede Prozessart (\textbf{a}, \textbf{b}, \textbf{z}, \textbf{Konsole}) bekommt eine Zahl an Zeitscheiben zugeteilt. Die Anzahl spiegelt hierbei direkt die Priorität des Prozesses wieder. Nach Ablauf einer Zeitscheibe wird die Priorität dekrementiert. Ist die Priorität gleich 0 wird der Prozess gewechselt. Damit haben unterschiedliche Prozessarten immer unterschiedlich lang Rechenzeit von der CPU.
+Jede Prozessart (\textbf{a}, \textbf{b}, \textbf{z}, \textbf{Konsole}) bekommt eine feste Zahl an Zeitscheiben zugeteilt. Die Anzahl spiegelt hierbei direkt die Priorität des Prozesses wieder. Nach Ablauf einer Zeitscheibe wird die Priorität dekrementiert. Ist die Priorität gleich 0, wird der Prozess gewechselt. Damit haben unterschiedliche Prozessarten immer unterschiedlich lang Rechenzeit von der CPU.

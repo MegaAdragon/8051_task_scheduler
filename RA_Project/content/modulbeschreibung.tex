@@ -5,6 +5,7 @@
 	\begin{description}[font=\sffamily\bfseries, leftmargin=1.5cm,style=sameline] 
 	\item{\textbf{main}}
 	Dies ist das Hauptprogramm. Beim Start werden die serielle Schnittstelle, das \textbf{scheduler}-Modul und die Timer initialisiert. Der Konsolenprozess wird als neuer Prozess erzeugt. Die Timer-Interrupts werden initialisiert. Danach befindet sich das Hauptprogramm in einer Endlosschleife.
+	
 	Dieses Modul enthält außerdem die Interrupt-Service-Routinen für die beiden Timer und damit auch den wesentlichen Teil der Scheduler-Logik.
 	
 	\item{\textbf{proc\_console}}
@@ -20,7 +21,7 @@
 	Der zu löschende Prozess wird anhand der übergebenen PID gesucht.
 	
 	\item{\textbf{change\_proc}}
-	Hier wird der Kontext der Prozesse getauscht. Hierbei werden alle prozessrelevanten Daten in den externen Speicher ausgelagert (ähnlich wie Swapping). Nächster Prozess wird aus der Prozesstabelle geholt und sein Kontext wird ins RAM geladen.
+	Hier wird der Kontext der Prozesse getauscht. Es werden alle prozessrelevanten Daten in den externen Speicher ausgelagert (ähnlich wie Swapping). Nächster Prozess wird aus der Prozesstabelle geholt und sein Kontext wird ins RAM geladen.
 	
 	\end{description} 
 	
@@ -28,8 +29,8 @@
 	
 	\item{\textbf{proc\_a}} Prozess a: Die Zeichenfolge \textquotedblleft abcde\textquotedblright wird auf der seriellen Schnittstelle 0 ausgegeben.
 	\item{\textbf{proc\_b}} Prozess b: Gibt jede Sekunde \textquotedblleft+\textquotedblright auf die serielle Schnittstelle 0 aus.
-	\item{\textbf{proc\_z}} Prozess z: Ruft fkt\_text auf
-	\item{\textbf{fkt\_text}} Testprozess: gibt eine Zeichenfolge auf serielle Schnittstelle 1 aus.
+	\item{\textbf{proc\_z}} Prozess z: Ruft fkt\_text auf. Hauptaufgabe dieses Modul ist es, ein mögliches RETURN aus fkt\_text abzufangen.
+	\item{\textbf{fkt\_text}} Textprozess: gibt eine Zeichenfolge auf serielle Schnittstelle 1 aus.
 	\end{description}
 	
 \newpage
@@ -39,17 +40,17 @@ Für das Programm werden folgende Speicherbereiche reserviert und verwendet:
 
 \subsubsection*{Variablen und Konstanten}
 
-Variablen und Konstanten werden im \textquotedblleft variables.inc\textquotedblright{} dem Befehl \begin{center}
+Variablen und Konstanten werden in \textquotedblleft variables.inc\textquotedblright{} mit dem Befehl \begin{center}
 <NAME> EQU <HEX>
 \end{center} angelegt. Durch einbinden der Datei in jedes Modul sind die Variablen global bekannt. Die genaue Beschreibung der Variablen und deren Funktion ist einem  kommentierten Listing im Anhang zu entnehmen.
 
 \subsubsection{Externer Datenbereich}
 Externer Datenbereich wird folgendermaßen genutzt: \newline Zu Beginn des Programms werden zwei Datenbereiche im externen Speicher reserviert. Ein Bereich ist die Prozesstabelle. Pro Prozess sind hier 4 Byte vergeben. Diese setzen sich wie folgt zusammen. 2 Byte DPTR auf den dazugehörigen Prozessdatenbereich, 1 Byte Bitmaske mit Prozessstatus und Prozesstyp und 1 Byte für die Prozess ID (PID). 
 \newline
-Es sind insgesamt 20 Prozesse möglich. Die Entscheidung für die Zahl 20 ist auf dieses Projekt zugeschnitte, kann generell aber \textquotedblleft beliebig\textquotedblright{} gesetzt werden. Die Grenze bildet hier die Größe des externen Datenbereichs.
+Es sind insgesamt 20 Prozesse möglich. Die Entscheidung für die Zahl 20 ist auf dieses Projekt zugeschnitten, kann generell aber \textquotedblleft beliebig\textquotedblright{} gesetzt werden. Die Grenze bildet hier die Größe des externen Datenbereichs.
 \newline
 Jeder Prozess besitzt seinen eigenen Datenbereich, in dem sein Kontext gespeichert wird. Pro Prozess sind 32 Byte reserviert. Aktuell werden davon lediglich 23 Byte benutzt. Die 10 geforderten Byte für den Stack und 13 Byte für den geforderten Kontext. Eine Erweiterung der Stackgröße ist möglich. Abbildung~\ref{fig:ext_data} zeigt die Speicherbelegung. \newline
-Der Vorteil dieses Verfahrens liegt in der Unabhängigkeit vom letztendlichen Prozess. Theoretisch kann eine beliebig große Anzahl von Prozessen, mit beliebigen Daten verwaltet werden. Alle Prozesse werden beim verwalten gleich behandelt, das bedeutet, dass weitere, zusätzliche Prozesse ohne größere Anpassung eingebunden werden könnten.
+Der Vorteil dieses Verfahrens liegt in der Unabhängigkeit vom letztendlichen Prozess. Theoretisch kann eine beliebig große Anzahl von Prozessen, mit beliebigen Daten verwaltet werden. Alle Prozesse werden beim verwalten gleich behandelt. Das bedeutet, dass weitere, zusätzliche Prozesse ohne größere Anpassung eingebunden werden könnten.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{./images/ext_data}
@@ -94,20 +95,20 @@ Bemerkung: Das Vorbereiten des Prozesses, also das setzen der Parameter ist ein 
 \subsubsection{Taskverwalter \texttt{scheduler.a51}}
 
 \paragraph{new\_process} In der Abbildung~\ref{fig:newproc} ist das Ablaufdiagramm für die Erstellung eines neuen Prozesses dargestellt. Dies ist ein Subprozess des Taskverwaltungs Moduls. Hierbei werden in die 4 Byte der Prozesstabelle die nötigen Informationen eingetragen [Startadresse des Prozesses (2 Byte), Bitmaske der Priorität und der Prozesstyp ID (1 Byte), Prozess ID (1 Byte) ]. \newline
-Als Parameter für einen neuen Prozess müssen die gewünschte Priorität, der Typ des Prozesses und die zugehörige Startadresse übergeben werden. Die Startadresse des neuen Prozesses (2 Byte) wird beim Anlegen auf den Stack für diesen Prozess geschrieben. Nach dem ersten Aufruf von change process wird an diese Adresse gesprungen und der neue Prozess somit gestartet.
+Als Parameter für einen neuen Prozess müssen die gewünschte Priorität, der Typ des Prozesses und die zugehörige Startadresse übergeben werden. Die Startadresse des neuen Prozesses (2 Byte) wird beim Anlegen auf den Stack für diesen Prozess geschrieben. Nach dem ersten Aufruf von \emph{change process} wird an diese Adresse gesprungen und der neue Prozess somit gestartet.
 \newline
 Bemerkung:
 Ein neuer Prozess wird immer an der ersten neuen Stelle eingefügt. Da der Konsolenprozess immer ganz unten in der Tabelle ist, wird mit dem nächsten Prozesswechsel automatisch der neueste eingefügte Prozess gewählt. \newline
-Entsteht durch das Löschen eines Prozesses ein "Loch" in der Tabelle, wird ein neuer Prozess zuerst in das "Loch" eingefügt.
-
-
+Entsteht durch das Löschen eines Prozesses ein \textquotedblleft Loch\textquotedblright in der Tabelle, wird ein neuer Prozess zuerst in das \textquotedblleft Loch\textquotedblright eingefügt.
+\newline
+\newline
 So setzt sich die Bitmaske des dritten Bytes eines Prozess in der Prozesstabelle zusammen:
 
 \begin{align*}
 B\underbrace{\si{xxx}}_{\mathtt{Priorität}}\underbrace{\si{xx}}_{\mathtt{frei}}\underbrace{\si{xxx}}_{\mathtt{Prozesstyp}}
 \end{align*}
 
-Die Prozess ID ist ein HEX-Wert welcher der aktuellen Position des Prozesses in der Tabelle entspricht.
+Die Prozess ID ist ein HEX-Wert, welcher der aktuellen Position des Prozesses in der Tabelle entspricht.
 
 \begin{figure}[H]
 \centering
@@ -115,7 +116,7 @@ Die Prozess ID ist ein HEX-Wert welcher der aktuellen Position des Prozesses in 
 \caption{Ablaufdiagramm \texttt{newproc}}
 \label{fig:newproc}
 \end{figure}
-
+\newpage
 \paragraph{delete process}
 In der Abbildung~\ref{fig:delproc} ist das Ablaufdiagramm des Subprozesses del\_proc dargestellt. Hierbei werden zunächst die Daten der aktuellen Routine gerettet. Anschließend wird die Prozess ID (PID) aus der Bitmaske im vierten Byte der Prozesstabelle extrahiert und mit der zu löschenden ID verglichen. Bei Übereinstimmung wird die Referenz auf den Prozessdatenbereich des zu löschenden Prozesses entfernt.
 
@@ -129,12 +130,14 @@ Im Konsolenprozess wird hierfür die PID des ersten in der Tabelle gefunden Proze
 \label{fig:delproc}
 \end{figure}
 
+\newpage
+
 \paragraph{change process}
 
 In der Abbildung~\ref{fig:changeproc} ist das Ablaufdiagramm des Subprozesses change process dargestellt. Dieser Subprozess sucht anhand der aktuellen Position in der Prozesstabelle den nächsten Prozess. Da es durchaus leere Einträge geben kann, werden diese Übersprungen. Change process wird nur aufgerufen, wenn ein Prozess seine Zeitscheiben für die Verwendung der CPU aufgebraucht hat.
 Die Subroutine rotiert selbstständig durch die Tabelle und merkt sich die jeweils aktuelle Position in globalen Variablen. 
 
-Die Daten des aktuellen Prozesses werden in den externen Prozessdatenbereich kopiert und die Daten des neuen Prozesses werden geladen. Die Daten werden im Kapitel Speichernutzung spezifiziert.
+Die Daten des aktuellen Prozesses werden in den externen Prozessdatenbereich kopiert und die Daten des neuen Prozesses werden von dort geladen. Die Daten werden im Kapitel Speichernutzung spezifiziert.
 
 \begin{figure}[H]
 \centering
@@ -144,10 +147,10 @@ Die Daten des aktuellen Prozesses werden in den externen Prozessdatenbereich kop
 \end{figure}
 
 \paragraph{save and restore data}
-In der Abbildung~\ref{fig:restsavproc} ist die Subroutine zum speichern und retten des Kontexts gezeigt. Die Auflistung der Daten ist dem Kapitel Speichernutzung zu entnehmen. \newline
+In der Abbildung~\ref{fig:restsavproc} ist die Subroutine zum speichern und retten des Kontextes gezeigt. Die Auflistung der Daten ist dem Kapitel Speichernutzung zu entnehmen. \newline
 Konkret dient diese Subroutine dazu, alle Daten des aktuellen Prozesses (also des Prozesses, der die entsprechende Scheduler-Funktion aufgerufen hat) temporär in den User RAM zwischenzuspeichern und nach Bedarf wiederherzustellen.\newline
-Außerdem entspricht die Datenstruktur der geforderten Spezifikation für die Prozessdaten im externen Speicher. Das bedeutet, um einen Prozess zu wechseln können einfach die temporär gespeicherten Daten mittels einer einfachen Schleife in den externen Datenbereich kopiert werden.\newline
-Beim verlassen der oben beschriebenen Subroutinen werden die gespeicherten Prozessdaten wiederhergestellt. Damit sind die Arbeitsbereiche aller Scheduler-Funktionen und die der einzelnen Prozesse komplett voneinander getrennt.
+Außerdem entspricht die Datenstruktur der geforderten Spezifikation für die Prozessdaten im externen Speicher. Das bedeutet, um einen Prozess zu wechseln, können einfach die temporär gespeicherten Daten mittels einer einfachen Schleife in den externen Datenbereich kopiert werden.\newline
+Beim Verlassen der oben beschriebenen Subroutinen werden die gespeicherten Prozessdaten wiederhergestellt. Damit sind die Arbeitsbereiche aller Scheduler-Funktionen und die der einzelnen Prozesse komplett voneinander getrennt.
 
 \begin{figure}[H]
 \centering
@@ -155,6 +158,8 @@ Beim verlassen der oben beschriebenen Subroutinen werden die gespeicherten Proze
 \caption{Ablaufdiagramm \texttt{restore and save process}}
 \label{fig:restsavproc}
 \end{figure}
+
+\newpage
 
 \subsubsection{Serial}
 \paragraph{serial init} In der Abbildung~\ref{fig:serialinit} ist die Subroutine serial init dargestellt. Hierbei werden die notwendigen Parameter für die serielle Schnittstelle gesetzt.
@@ -190,7 +195,7 @@ In der Abbildung~\ref{fig:serialinout} ist die Subroutine serial out dargestellt
 \subsubsection{Interrupt Routinen}
 In der Abbildung \ref{fig:intr0} und in der Abbildung \ref{fig:intr1} sind die Ablaufdiagramme für das Verhalten der Timer Interruptroutinen dargestellt. 
 
-In der Interrupt Service Routine für den Timer 0 befindet sich die Logik zur Umschaltung der Prozesse. Hierbei wird anhand der Priorität geprüft, ob einem Prozess die CPU-Rechenzeit noch zur Verfügung steht oder entzogen werden soll. 
+In der Interrupt Service Routine für den Timer 0 befindet sich die Logik zur Umschaltung der Prozesse. Hierbei wird anhand der Priorität geprüft, ob einem Prozess noch CPU-Rechenzeit zur Verfügung steht, oder ob zum nächsten Prozess gewechselt werden soll. 
 
 Die Interrupt Service Routine für den Timer 1 inkrementiert den Sekundenzähler.
 
@@ -209,6 +214,7 @@ Die Interrupt Service Routine für den Timer 1 inkrementiert den Sekundenzähler.
 	\label{fig:intr1}
 \end{figure}
 
+\newpage
 
 \subsubsection{Prozess a}
 
@@ -223,7 +229,7 @@ In der Abbildung~\ref{fig:proca} ist die Implementierung des Prozess A dargestel
 
 \subsubsection{Prozess b}
 		
-		In der Abbildung~\ref{fig:procb} ist die Implementierung des Prozess B dargestellt. Beim Start holt sich der Prozess den aktuellen Wert des Sekundenzählers (ganze Sekunden). In einer Schleife wird geprüft, ob sich der Wert des Zählers verändert hat. Hiermit ist eine Sekunde vergangen. Danach wird ein "+" Zeichen auf die Konsole ausgegeben. 
+		In der Abbildung~\ref{fig:procb} ist die Implementierung des Prozess B dargestellt. Beim Start holt sich der Prozess den aktuellen Wert des Sekundenzählers (ganze Sekunden). In einer Schleife wird geprüft, ob sich der Wert des Zählers verändert hat. Hiermit ist eine Sekunde vergangen. Danach wird ein \textquoteleft +\textquoteright\space Zeichen auf die Konsole ausgegeben. 
 		
 				\begin{figure}[H]
 				\centering
