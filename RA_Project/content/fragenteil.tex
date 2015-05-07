@@ -1,8 +1,8 @@
 \section{Fragen zum Projekt}
 \paragraph{Frage 1:} Wie behandeln Sie den doppelten Aufruf eines Prozesses solange dieser aktiv ist? (z.B. bei der Befehlsfolge: \textbf{b}, \textbf{b})
 \paragraph{Antwort 1:} Generell wird ein doppelter Prozessaufruf nicht gesondert behandelt. Das bedeutet, dass bei erneutem Aufruf ein zusätzlicher neuer Prozess mit eindeutiger PID angelegt wird. Danach teilt der Task-Verwalter den Prozessen in der üblichen Vorgehensweise die CPU-Zeit zu. \newline
-Im Fall von \emph{Prozess a} entfällt der doppelte Aufruf, da sich der Prozess vor Ablauf der Zeitscheibe selbst beendet.\newline
-Beim doppelten Aufruf des Text-Prozess wird geprüft, ob der Prozess bereits existiert. Falls dies der Fall ist, wird er gelöscht.
+Im Fall von \emph{Prozess a} kommt der reale doppelte Aufruf gar nicht vor, da sich der Prozess vor Ablauf der Zeitscheibe selbst beendet. Allerdings da jeder Prozess gleich behandelt wird, wird hier kein Unterschied gemacht.\newline
+Beim doppelten Aufruf des Text-Prozess wird geprüft, ob der Prozess bereits existiert. Falls dies der Fall ist, wird er gelöscht. Dies ist der Befehlsstruktur des Prozesses geschuldet. 
 
 
 \paragraph{Frage 2:} Wie reagiert ihr Programm auf die Benutzung der seriellen Schnittstelle 0 durch mehrere Prozesse?

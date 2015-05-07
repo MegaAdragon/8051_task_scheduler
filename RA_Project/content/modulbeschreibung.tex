@@ -104,7 +104,7 @@ Entsteht durch das Löschen eines Prozesses ein "Loch" in der Tabelle, wird ein n
 So setzt sich die Bitmaske des dritten Bytes eines Prozess in der Prozesstabelle zusammen:
 
 \begin{align*}
-B\underbrace{\si{xxxxx}}_{\mathtt{Priorität}}\underbrace{\si{xxx}}_{\mathtt{Prozesstyp}}
+B\underbrace{\si{xxx}}_{\mathtt{Priorität}}\underbrace{\si{xx}}_{\mathtt{frei}}\underbrace{\si{xxx}}_{\mathtt{Prozesstyp}}
 \end{align*}
 
 Die Prozess ID ist ein HEX-Wert welcher der aktuellen Position des Prozesses in der Tabelle entspricht.
@@ -151,7 +151,7 @@ Beim verlassen der oben beschriebenen Subroutinen werden die gespeicherten Proze
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.6\textwidth]{./images/restore_save_proc}
+\includegraphics[width=0.5\textwidth]{./images/restore_save_proc}
 \caption{Ablaufdiagramm \texttt{restore and save process}}
 \label{fig:restsavproc}
 \end{figure}
@@ -161,11 +161,11 @@ Beim verlassen der oben beschriebenen Subroutinen werden die gespeicherten Proze
 
 	\begin{figure}[H]
 		\centering
-		\includegraphics[width=0.3\textwidth]{./images/serial_init}
+		\includegraphics[width=0.2\textwidth]{./images/serial_init}
 		\caption{Ablaufdiagramm der Subroutine serial init}
 		\label{fig:serialinit}
 		\end{figure}
-
+\clearpage
 
 \paragraph{serial in}
 In der Abbildung~\ref{fig:serialin} ist die Subroutine serial in dargestellt. Am Ende jeder Eingabe wird das User Flag F0 gesetzt. Der Konsolenprozess wartet mit dem Auswerten einer Eingabe bis dieses Flag gesetzt ist. Für die Rückgabe des eingegebenen Zeichens wird das Register B verwendet.	
@@ -176,9 +176,9 @@ In der Abbildung~\ref{fig:serialin} ist die Subroutine serial in dargestellt. Am
 		\label{fig:serialin}
 		\end{figure}
 
-
+\clearpage
 \paragraph{serial out}
-In der Abbildung~\ref{fig:serialout} ist die Subroutine serial out dargestellt. Es wird das Register B übergebene Zeichen ausgegeben. Über das Hardware Flag T10 wird die serielle Schnittstelle explizit gesperrt, bzw. freigeben. Mit der Ausgabe eines Zeichens muss so lange gewartet werden, bis das vorherige Zeichen erfolgreich ausgegeben wurde.
+In der Abbildung~\ref{fig:serialinout} ist die Subroutine serial out dargestellt. Es wird das Register B übergebene Zeichen ausgegeben. Über das Hardware Flag T10 wird die serielle Schnittstelle explizit gesperrt, bzw. freigeben. Mit der Ausgabe eines Zeichens muss so lange gewartet werden, bis das vorherige Zeichen erfolgreich ausgegeben wurde.
 
 	\begin{figure}[H]
 		\centering
@@ -186,7 +186,7 @@ In der Abbildung~\ref{fig:serialout} ist die Subroutine serial out dargestellt. 
 		\caption{Ablaufdiagramm der Subroutine serial out}
 		\label{fig:serialinout}
 		\end{figure}
-
+\clearpage
 \subsubsection{Interrupt Routinen}
 In der Abbildung \ref{fig:intr0} und in der Abbildung \ref{fig:intr1} sind die Ablaufdiagramme für das Verhalten der Timer Interruptroutinen dargestellt. 
 
