@@ -54,20 +54,16 @@ main:
 	;end main loop
 		
 
-;;TODO:
-; check if it is save to use TMP_DPL & TMP_DPH
-
-; change_proc only works in ISR
-; adress for RETI comes from process stack
-; RETI goes to selected process
+	; address for RETI comes from process stack
+	; RETI goes into current process
 
 	;;BEGIN TIMER_1 INTERRUPT HANDLING
 	;
 	;
 	
 	timer0_intr:	
-		; reload timer
-		MOV TL0, #INIT_TL0
+		
+		MOV TL0, #INIT_TL0 ; reload timer
 		MOV TH0, #INIT_TH0			
 				
 		
@@ -107,8 +103,7 @@ main:
 			INC DPTR	; goto process status byte
 			INC DPTR
 			
-			;get PRIO (first 3 bit)
-			MOVX A, @DPTR
+			MOVX A, @DPTR	;get PRIO (first 3 bit)
 			ANL A, #0xE0
 			RL A
 			RL A
